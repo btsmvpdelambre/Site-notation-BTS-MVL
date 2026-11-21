@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTS MV — Portail d'Évaluation & Suivi Semestriel (E5–E8)</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-bg: #eff6ff;
+    --secondary: #0f766e;
+    --secondary-bg: #f0fdfa;
+    --accent: #d97706;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #cbd5e1;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+  header .subtitle { font-size: 0.82rem; color: #cbd5e1; }
+  .header-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+  nav.tabs {
+    background: white;
+    border-bottom: 2px solid var(--border);
+    padding: 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .tab-btn {
+    border: none;
+    background: transparent;
+    padding: 0.85rem 1.15rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .tab-btn:hover { color: var(--primary); background: var(--primary-bg); }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8fafc; }
+  .badge-count {
+    background: var(--primary-light);
+    color: white;
+    font-size: 0.72rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+  }
+
+  main { max-width: 1440px; margin: 1.5rem auto; padding: 0 1.25rem 3rem; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 960px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 7px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #1e40af; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-teal { background: var(--secondary); color: white; }
+  .btn-teal:hover { background: #115e59; }
+  .btn-warning { background: var(--accent); color: white; }
+  .btn-warning:hover { background: #b45309; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-outline { background: white; color: var(--text); border-color: var(--border); }
+  .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
+  .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+
+  input[type="text"], input[type="date"], select, textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    background: white;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  }
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.25rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { border: 1px solid var(--border); padding: 0.55rem 0.65rem; text-align: left; }
+  th { background: #f8fafc; font-weight: 700; color: #334155; }
+  tr:nth-child(even) td { background: #fcfcfd; }
+
+  /* Boutons niveaux taxonomiques */
+  .tax-group { display: flex; gap: 0.3rem; }
+  .tax-btn {
+    flex: 1;
+    padding: 0.42rem 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.12s;
+  }
+  .tax-btn:hover { background: #f1f5f9; }
+  .tax-btn.sel-0 { background: #e2e8f0; color: #475569; border-color: #94a3b8; }
+  .tax-btn.sel-1 { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+  .tax-btn.sel-2 { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
+  .tax-btn.sel-3 { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+  .tax-btn.sel-4 { background: #dcfce7; color: #166534; border-color: #22c55e; }
+
+  .pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .pill-1 { background: #fee2e2; color: #991b1b; }
+  .pill-2 { background: #fef3c7; color: #92400e; }
+  .pill-3 { background: #dbeafe; color: #1e40af; }
+  .pill-4 { background: #dcfce7; color: #166534; }
+  .pill-0 { background: #f1f5f9; color: #64748b; }
+
+  .stat-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem;
+    text-align: center;
+  }
+  .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+  .stat-lbl { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+
+  .toast {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    background: #0f172a;
+    color: white;
+    padding: 0.75rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.25s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .alert-info {
+    background: var(--primary-bg);
+    border-left: 4px solid var(--primary-light);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #1e3a8a;
+    margin-bottom: 1rem;
+  }
+
+  .archive-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.65rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    background: white;
+  }
+  .archive-item:hover { border-color: var(--primary-light); }
+
+  /* Modal aperçu / impression */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    z-index: 200;
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+  .modal-backdrop.open { display: flex; justify-content: center; align-items: flex-start; }
+  .modal-content {
+    background: white;
+    width: 100%;
+    max-width: 920px;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  @media print {
+    header, nav.tabs, .no-print { display: none !important; }
+    body { background: white; }
+    .card { border: none; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <div>
+    <h1>🔧 BTS MV — Portail d'Évaluation & Suivi Semestriel (E5–E8)</h1>
+    <div class="subtitle">Index centralisé des étudiants • Grilles E5, E6, E7, E8 • Synthèse Excel multi-onglets • Archives JSON & PDF</div>
+  </div>
+  <div class="header-actions">
+    <select id="globalSemesterSelect" style="width:auto; font-weight:700; color:#0f172a;" onchange="changeSemester(this.value)">
+      <option value="S1">📅 Semestre 1 (S1)</option>
+      <option value="S2">📅 Semestre 2 (S2)</option>
+      <option value="S3">📅 Semestre 3 (S3)</option>
+      <option value="S4">📅 Semestre 4 (S4)</option>
+    </select>
+    <button class="btn btn-success" onclick="exportGlobalExcel()">📊 Exporter Excel Complet (.xlsx)</button>
+    <button class="btn btn-outline" onclick="exportFullBackupJSON()">💾 Sauvegarder Base JSON</button>
+    <label class="btn btn-outline" style="margin:0; cursor:pointer;">
+      📂 Charger JSON
+      <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importJSONFile(event)">
+    </label>
+  </div>
+</header>
+
+<nav class="tabs no-print">
+  <button class="tab-btn active" data-tab="index" onclick="switchTab('index')">
+    👥 1. Index Étudiants <span class="badge-count" id="badgeStudents">0</span>
+  </button>
+  <button class="tab-btn" data-tab="grille" onclick="switchTab('grille')">
+    📝 2. Évaluer (E5 / E6 / E7 / E8)
+  </button>
+  <button class="tab-btn" data-tab="archives" onclick="switchTab('archives')">
+    🗂️ 3. Grilles Réalisées (JSON/PDF) <span class="badge-count" id="badgeGrids">0</span>
+  </button>
+  <button class="tab-btn" data-tab="synthese" onclick="switchTab('synthese')">
+    📈 4. Synthèse Semestrielle & Fiches Élèves
+  </button>
+</nav>
+
+<main>
+  <!-- ==================== VUE 1 : INDEX ÉTUDIANTS ==================== -->
+  <section id="view-index" class="view active">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📋 Import rapide (Copier-Coller Pronote ou Excel)</div>
+        <div class="alert-info">
+          Collez directement votre colonne ou tableau d'élèves depuis <strong>Pronote</strong> ou <strong>Excel</strong> (formats acceptés : <code>NOM Prénom</code>, <code>NOM;Prénom</code>, tabulation Excel, ou avec colonne Groupe/Entreprise). Les doublons sont ignorés automatiquement.
+        </div>
+        <label for="pasteStudentsArea">Zone de collage (1 étudiant par ligne) :</label>
+        <textarea id="pasteStudentsArea" rows="9" placeholder="Exemple Pronote / Excel :
+DUPONT Léo
+MARTIN Chloé	Groupe A
+BERNARD Lucas;Garage Central
+PETIT Sarah
+ROBERT Hugo"></textarea>
+        <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="importPastedStudents()">➕ Ajouter à la liste</button>
+          <button class="btn btn-outline" onclick="document.getElementById('pasteStudentsArea').value=''">Effacer la zone</button>
+          <button class="btn btn-outline" onclick="loadDemoData()">✨ Charger jeu d'essai (5 élèves)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🎓 Liste active des étudiants (<span id="studentCountLabel">0</span>)</span>
+          <div style="display:flex; gap:0.4rem;">
+            <input type="text" id="newStudentName" placeholder="Nom Prénom..." style="width:180px;" onkeydown="if(event.key==='Enter') addSingleStudent()">
+            <button class="btn btn-teal btn-sm" onclick="addSingleStudent()">+ Ajouter</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAllStudents()">Tout vider</button>
+          </div>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:0.65rem;">
+          Cette liste alimente instantanément les sélecteurs des grilles <strong>E5, E6, E7, E8</strong> et génère automatiquement les onglets individuels dans le fichier Excel.
+        </p>
+        <div style="max-height:360px; overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:45px;">#</th>
+                <th>Nom & Prénom</th>
+                <th>Groupe / Entreprise (opt.)</th>
+                <th style="width:90px;">Grilles (<span id="curSemLbl1">S1</span>)</th>
+                <th style="width:65px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VUE 2 : SAISIE GRILLE E5 / E6 / E7 / E8 ==================== -->
+  <section id="view-grille" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>📝 Évaluation d'une activité / TP / Situation professionnelle</span>
+        <span id="editingBadge" class="pill pill-2" style="display:none;">Mode modification d'une grille existante</span>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:1rem;">
+        <div>
+          <label>1. Épreuve / Unité :</label>
+          <select id="evalUnit" onchange="renderCompetencyForm()">
+            <option value="E5">E5 (U5) — Diagnostic et maintenance</option>
+            <option value="E6">E6 (U6) — Intervention systèmes complexes</option>
+            <option value="E7">E7 (U7) — Organisation et gestion d'atelier</option>
+            <option value="E8">E8 (U8) — Projet technique et innovation</option>
+          </select>
+        </div>
+        <div>
+          <label>2. Étudiant (depuis l'Index) :</label>
+          <select id="evalStudent"></select>
+        </div>
+        <div>
+          <label>3. Date de l'évaluation :</label>
+          <input type="date" id="evalDate">
+        </div>
+        <div>
+          <label>4. Semestre d'imputation :</label>
+          <select id="evalSemester">
+            <option value="S1">Semestre 1 (S1)</option>
+            <option value="S2">Semestre 2 (S2)</option>
+            <option value="S3">Semestre 3 (S3)</option>
+            <option value="S4">Semestre 4 (S4)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:1rem;">
+        <div>
+          <label>5. Intitulé de l'activité / TP / OR / PFMP :</label>
+          <input type="text" id="evalActivityTitle" placeholder="Ex : TP Diagnostic circuit canister & électrovanne purge / OR n°245">
+        </div>
+        <div>
+          <label>Support / Véhicule / Contexte (optionnel) :</label>
+          <input type="text" id="evalContext" placeholder="Ex : Renault Clio V 1.0 TCe — Atelier Lycée ou PFMP">
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:85px;">Code</th>
+              <th style="width:26%;">Compétence évaluée</th>
+              <th style="width:24%;">Activités professionnelles associées</th>
+              <th style="width:240px;">Niveau Taxonomique (NE = Non évalué)</th>
+              <th>Observation spécifique sur l'activité</th>
+            </tr>
+          </thead>
+          <tbody id="competencyFormBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <label>Appréciation globale / Bilan de l'activité :</label>
+        <textarea id="evalGlobalComment" rows="2" placeholder="Points forts, axes de progrès, autonomie constatée..."></textarea>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:1.1rem; padding-top:1rem; border-top:1px solid var(--border);">
+        <div style="font-size:0.9rem; font-weight:700; color:var(--primary);" id="liveGridAverage">
+          Moyenne de cette grille : —
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+          <button class="btn btn-outline" onclick="resetEvalForm()">🔄 Nouvelle grille vierge</button>
+          <button class="btn btn-warning" onclick="saveGrid(true)">📄 Enregistrer + Générer PDF</button>
+          <button class="btn btn-primary" onclick="saveGrid(false)">💾 Enregistrer la grille</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VUE 3 : ARCHIVES DES GRILLES ==================== -->
+  <section id="view-archives" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>🗂️ Historique des grilles évaluées (Revoir, Modifier, Exporter PDF ou JSON)</span>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <label class="btn btn-teal btn-sm" style="margin:0; cursor:pointer;">
+            📥 Réintégrer une ou plusieurs grilles (.json)
+            <input type="file" accept=".json" multiple style="display:none;" onchange="reintegrateGridsJSON(event)">
+          </label>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:1rem;">
+        <div>
+          <label>Filtrer par Semestre :</label>
+          <select id="filterSem" onchange="renderArchives()">
+            <option value="ALL">Tous les semestres</option>
+            <option value="S1">Semestre 1 (S1)</option>
+            <option value="S2">Semestre 2 (S2)</option>
+            <option value="S3">Semestre 3 (S3)</option>
+            <option value="S4">Semestre 4 (S4)</option>
+          </select>
+        </div>
+        <div>
+          <label>Filtrer par Épreuve :</label>
+          <select id="filterUnit" onchange="renderArchives()">
+            <option value="ALL">Toutes (E5, E6, E7, E8)</option>
+            <option value="E5">E5 (U5)</option>
+            <option value="E6">E6 (U6)</option>
+            <option value="E7">E7 (U7)</option>
+            <option value="E8">E8 (U8)</option>
+          </select>
+        </div>
+        <div>
+          <label>Filtrer par Étudiant :</label>
+          <select id="filterStudent" onchange="renderArchives()">
+            <option value="ALL">Tous les étudiants</option>
+          </select>
+        </div>
+        <div>
+          <label>Recherche mot-clé activité :</label>
+          <input type="text" id="filterSearch" placeholder="Ex: canister, ADAS, devis..." oninput="renderArchives()">
+        </div>
+      </div>
+
+      <div id="archivesListContainer"></div>
+    </div>
+  </section>
+
+  <!-- ==================== VUE 4 : SYNTHÈSE SEMESTRIELLE & FICHES ÉLÈVES ==================== -->
+  <section id="view-synthese" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>📈 Tableau de bord Promotion — <span id="synthSemTitle">Semestre 1 (S1)</span></span>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="btn btn-success" onclick="exportGlobalExcel()">📊 Télécharger Excel Complet (Synthèse + Onglets Élèves)</button>
+        </div>
+      </div>
+      <p style="font-size:0.83rem; color:var(--muted); margin-bottom:0.85rem;">
+        Chaque cellule calcule automatiquement la moyenne des niveaux taxonomiques (1 à 4) obtenus sur l'ensemble des activités évaluées durant le semestre sélectionné. Cliquez sur un étudiant pour inspecter le détail de ses compétences et la liste de ses activités.
+      </p>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Étudiant</th>
+              <th style="text-align:center;">Nb Activités</th>
+              <th style="text-align:center;">Moy. U5 (/4)</th>
+              <th style="text-align:center;">Moy. U6 (/4)</th>
+              <th style="text-align:center;">Moy. U7 (/4)</th>
+              <th style="text-align:center;">Moy. U8 (/4)</th>
+              <th style="text-align:center;">Moy. Générale (/4)</th>
+              <th style="text-align:center;">Note Semestrielle (/20)</th>
+              <th style="text-align:center;">Détail</th>
+            </tr>
+          </thead>
+          <tbody id="promoSynthBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fiche individuelle détaillée de l'étudiant sélectionné -->
+    <div class="card" id="studentDetailCard">
+      <div class="card-title">
+        <span>🧑‍🎓 Fiche Individuelle Semestrielle (comme dans l'onglet Excel)</span>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <select id="detailStudentSelect" style="width:230px;" onchange="renderStudentDetail()"></select>
+          <button class="btn btn-warning btn-sm" onclick="exportStudentSheetPDF()">📄 PDF Fiche Élève</button>
+        </div>
+      </div>
+      <div id="studentDetailContent"></div>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL APERÇU GRILLE & EXPORT PDF -->
+<div class="modal-backdrop" id="gridModal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.6rem; border-bottom:1px solid var(--border);" class="no-print">
+      <strong>Aperçu de la grille d'évaluation</strong>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn btn-warning btn-sm" onclick="downloadModalPDF()">📄 Télécharger PDF</button>
+        <button class="btn btn-teal btn-sm" id="modalJsonBtn">💾 Télécharger JSON</button>
+        <button class="btn btn-outline btn-sm" onclick="closeModal()">✖ Fermer</button>
+      </div>
+    </div>
+    <div id="modalPrintArea"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== RÉFÉRENTIEL BTS MV (E5 À E8) ====================
+const REFERENTIEL = {
+  E5: {
+    codeU: 'U5',
+    title: 'U5 - Diagnostic et maintenance',
+    short: 'Diagnostic et maintenance',
+    competences: [
+      { code: 'C1.1', label: "Collecter les informations nécessaires à l'intervention", activities: "Lecture OR, historique véhicule, dialogue client" },
+      { code: 'C1.2', label: "Identifier les éléments et sous-ensembles défectueux", activities: "Lecture défauts outil diag, mesures multimètre/oscilloscope" },
+      { code: 'C1.3', label: "Élaborer une hypothèse et un protocole de contrôle", activities: "Analyse schémas électriques, arbre de diagnostic" },
+      { code: 'C1.4', label: "Valider le fonctionnement après intervention", activities: "Essai dynamique, effacement défauts, contrôle paramètres" }
+    ]
+  },
+  E6: {
+    codeU: 'U6',
+    title: 'U6 - Intervention sur systèmes complexes',
+    short: 'Intervention systèmes complexes',
+    competences: [
+      { code: 'C2.1', label: "Organiser le poste de travail et sécuriser l'intervention", activities: "Consignation véhicule hybride/électrique, EPI, outillage" },
+      { code: 'C2.2', label: "Réaliser les opérations de dépose, repose et réglage", activities: "Distribution, embrayage/boîte pilotée, train roulant" },
+      { code: 'C2.3', label: "Paramétrer et calibrer les systèmes embarqués", activities: "Calibrage caméra/radar ADAS, télécodage calculateur" }
+    ]
+  },
+  E7: {
+    codeU: 'U7',
+    title: "U7 - Organisation et gestion d'atelier",
+    short: "Organisation et gestion d'atelier",
+    competences: [
+      { code: 'C3.1', label: "Planifier les interventions et gérer les flux", activities: "Affectation des ordres de réparation, suivi temps barémés" },
+      { code: 'C3.2', label: "Gérer la relation client et la restitution du véhicule", activities: "Devis, explication facture, conseil entretien" },
+      { code: 'C3.3', label: "Analyser les indicateurs de performance de l'atelier", activities: "Productivité, efficacité, taux de facturation" }
+    ]
+  },
+  E8: {
+    codeU: 'U8',
+    title: 'U8 - Projet technique et innovation',
+    short: 'Projet technique et innovation',
+    competences: [
+      { code: 'C4.1', label: "Analyser une problématique technique ou technologique", activities: "Étude comparative motorisations, diagnostic approfondi" },
+      { code: 'C4.2', label: "Concevoir et présenter une solution argumentée", activities: "Dossier technique, soutenance orale, chiffrage" }
+    ]
+  }
+};
+
+const TAXO_LABELS = {
+  0: 'Non évalué',
+  1: 'Niveau 1 - Découverte',
+  2: 'Niveau 2 - En cours',
+  3: 'Niveau 3 - Acquis',
+  4: 'Niveau 4 - Maîtrisé'
+};
+
+// ==================== ÉTAT GLOBAL & PERSISTANCE ====================
+const STORAGE_KEY = 'bts_mv_suivi_e5_e8_v1';
+let state = {
+  currentSemester: 'S1',
+  students: [], // { id, name, group }
+  grids: []     // { id, unit, studentId, studentName, date, semester, activityTitle, context, scores: {C1.1: 3...}, obs: {C1.1: '...'}, globalComment, updatedAt }
+};
+
+let editingGridId = null;
+let currentFormScores = {};
+let currentModalGrid = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.students)) {
+        state = parsed;
+      }
+    }
+  } catch (e) { console.error(e); }
+  if (!state.currentSemester) state.currentSemester = 'S1';
+  document.getElementById('globalSemesterSelect').value = state.currentSemester;
+  document.getElementById('evalSemester').value = state.currentSemester;
+  document.getElementById('evalDate').valueAsDate = new Date();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  refreshAllUI();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ==================== NAVIGATION & SEMESTRE ====================
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + tabName));
+  if (tabName === 'synthese') {
+    renderPromoSynthesis();
+    renderStudentDetail();
+  } else if (tabName === 'archives') {
+    renderArchives();
+  }
+}
+
+function changeSemester(sem) {
+  state.currentSemester = sem;
+  document.getElementById('evalSemester').value = sem;
+  document.getElementById('filterSem').value = sem;
+  saveState();
+  showToast(`Semestre actif : ${sem}`);
+}
+
+// ==================== GESTION INDEX ÉTUDIANTS ====================
+function generateId(prefix = 'id') {
+  return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+}
+
+function normalizeName(str) {
+  return str.trim().replace(/\s+/g, ' ');
+}
+
+function importPastedStudents() {
+  const raw = document.getElementById('pasteStudentsArea').value;
+  if (!raw.trim()) return showToast('Collez une liste avant de valider.');
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(line => {
+    // Ignorer éventuelle ligne d'en-tête Pronote/Excel
+    if (/^(nom|étudiant|élève|prenom|prénom)\b/i.test(line) && line.length < 35) return;
+    let parts = line.split(/\t|;/);
+    let name = '';
+    let group = '';
+    if (parts.length >= 2) {
+      // Si 2 colonnes courtes (ex: NOM \t Prénom), on fusionne sauf si col 2 ressemble à un groupe
+      if (parts.length >= 3) {
+        name = normalizeName(parts[0] + ' ' + parts[1]);
+        group = normalizeName(parts.slice(2).join(' '));
+      } else {
+        const p0 = normalizeName(parts[0]);
+        const p1 = normalizeName(parts[1]);
+        if (/^(groupe|grp|entreprise|garage|atelier|bts)/i.test(p1)) {
+          name = p0;
+          group = p1;
+        } else {
+          name = normalizeName(p0 + ' ' + p1);
+        }
+      }
+    } else {
+      name = normalizeName(parts[0]);
+    }
+    if (!name) return;
+    const exists = state.students.some(s => s.name.toLowerCase() === name.toLowerCase());
+    if (!exists) {
+      state.students.push({ id: generateId('stu'), name, group });
+      added++;
+    }
+  });
+  document.getElementById('pasteStudentsArea').value = '';
+  saveState();
+  showToast(`${added} étudiant(s) ajouté(s) à l'index.`);
+}
+
+function addSingleStudent() {
+  const inp = document.getElementById('newStudentName');
+  const name = normalizeName(inp.value);
+  if (!name) return;
+  if (state.students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    return showToast('Cet étudiant est déjà dans la liste.');
+  }
+  state.students.push({ id: generateId('stu'), name, group: '' });
+  inp.value = '';
+  saveState();
+  showToast(`${name} ajouté.`);
+}
+
+function updateStudentField(id, field, val) {
+  const s = state.students.find(x => x.id === id);
+  if (s) {
+    s[field] = normalizeName(val);
+    // Mettre à jour le nom dans les grilles liées
+    if (field === 'name') {
+      state.grids.forEach(g => { if (g.studentId === id) g.studentName = s.name; });
+    }
+    saveState();
+  }
+}
+
+function removeStudent(id) {
+  if (!confirm('Supprimer cet étudiant de l’index ? (Ses grilles archivées seront conservées)')) return;
+  state.students = state.students.filter(s => s.id !== id);
+  saveState();
+}
+
+function clearAllStudents() {
+  if (!confirm('Vider toute la liste des étudiants ?')) return;
+  state.students = [];
+  saveState();
+}
+
+function loadDemoData() {
+  const demo = [
+    { name: 'DUPONT Léo', group: 'Garage du Centre' },
+    { name: 'MARTIN Chloé', group: 'Concession Renault Amiens' },
+    { name: 'BERNARD Lucas', group: 'Peugeot Somme' },
+    { name: 'PETIT Sarah', group: 'Atelier Lycée' },
+    { name: 'ROBERT Hugo', group: 'Citroën Nord' }
+  ];
+  demo.forEach(d => {
+    if (!state.students.some(s => s.name.toLowerCase() === d.name.toLowerCase())) {
+      state.students.push({ id: generateId('stu'), name: d.name, group: d.group });
+    }
+  });
+  // Ajouter quelques grilles d'exemple si vide
+  if (state.grids.length === 0 && state.students.length >= 2) {
+    const s1 = state.students[0];
+    const s2 = state.students[1];
+    state.grids.push(
+      {
+        id: generateId('grd'),
+        unit: 'E5',
+        studentId: s1.id,
+        studentName: s1.name,
+        date: '2026-10-14',
+        semester: state.currentSemester,
+        activityTitle: 'TP Diagnostic circuit canister & électrovanne de purge',
+        context: 'Clio V 1.0 TCe — Atelier',
+        scores: { 'C1.1': 3, 'C1.2': 3, 'C1.3': 2, 'C1.4': 3 },
+        obs: { 'C1.1': 'OR bien exploité', 'C1.2': 'Relevé oscilloscope conforme', 'C1.3': 'Protocole à structurer', 'C1.4': 'Essai validé' },
+        globalComment: 'Bon diagnostic d’ensemble, méthode à consolider sur l’arbre de défaillance.',
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: generateId('grd'),
+        unit: 'E6',
+        studentId: s1.id,
+        studentName: s1.name,
+        date: '2026-11-05',
+        semester: state.currentSemester,
+        activityTitle: 'Consignation véhicule hybride & calibrage radar ADAS',
+        context: 'Peugeot 308 Hybrid — CSC Tool',
+        scores: { 'C2.1': 4, 'C2.2': 3, 'C2.3': 2 },
+        obs: { 'C2.1': 'Procédure habilitation B2VL respectée', 'C2.2': '', 'C2.3': 'Réglage cible à revoir' },
+        globalComment: 'Sécurité irréprochable.',
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: generateId('grd'),
+        unit: 'E5',
+        studentId: s2.id,
+        studentName: s2.name,
+        date: '2026-10-16',
+        semester: state.currentSemester,
+        activityTitle: 'TP Diagnostic réseau multiplexé CAN HS',
+        context: '208 PureTech — Mega Macs X',
+        scores: { 'C1.1': 4, 'C1.2': 3, 'C1.3': 3, 'C1.4': 3 },
+        obs: { 'C1.1': '', 'C1.2': 'Résistance terminaison mesurée', 'C1.3': 'Hypothèse pertinente', 'C1.4': '' },
+        globalComment: 'Très bonne autonomie.',
+        updatedAt: new Date().toISOString()
+      }
+    );
+  }
+  saveState();
+  showToast('Jeu d’essai chargé !');
+}
+
+function renderStudentsTable() {
+  const tbody = document.getElementById('studentsTableBody');
+  document.getElementById('studentCountLabel').textContent = state.students.length;
+  document.getElementById('badgeStudents').textContent = state.students.length;
+  document.getElementById('curSemLbl1').textContent = state.currentSemester;
+
+  if (state.students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:1.5rem;">Aucun étudiant dans l'index. Collez votre liste Pronote/Excel à gauche.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = state.students.map((s, idx) => {
+    const count = state.grids.filter(g => g.studentId === s.id && g.semester === state.currentSemester).length;
+    return `
+      <tr>
+        <td><strong>${idx + 1}</strong></td>
+        <td><input type="text" value="${escapeHtml(s.name)}" onchange="updateStudentField('${s.id}', 'name', this.value)" style="font-weight:600;"></td>
+        <td><input type="text" value="${escapeHtml(s.group || '')}" placeholder="Groupe / Entreprise" onchange="updateStudentField('${s.id}', 'group', this.value)"></td>
+        <td style="text-align:center;"><span class="pill ${count > 0 ? 'pill-3' : 'pill-0'}">${count} grille(s)</span></td>
+        <td style="text-align:center;">
+          <button class="btn btn-outline btn-sm" title="Supprimer" onclick="removeStudent('${s.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function populateStudentDropdowns() {
+  const evalSel = document.getElementById('evalStudent');
+  const filterSel = document.getElementById('filterStudent');
+  const detailSel = document.getElementById('detailStudentSelect');
+
+  const curEval = evalSel.value;
+  const curFilter = filterSel.value;
+  const curDetail = detailSel.value;
+
+  const opts = state.students.map(s => `<option value="${s.id}">${escapeHtml(s.name)}${s.group ? ' (' + escapeHtml(s.group) + ')' : ''}</option>`).join('');
+
+  evalSel.innerHTML = state.students.length ? opts : '<option value="">-- Ajoutez des étudiants dans l’Index --</option>';
+  filterSel.innerHTML = '<option value="ALL">Tous les étudiants</option>' + opts;
+  detailSel.innerHTML = state.students.length ? opts : '<option value="">-- Aucun étudiant --</option>';
+
+  if (curEval && state.students.some(s => s.id === curEval)) evalSel.value = curEval;
+  if (curFilter) filterSel.value = curFilter;
+  if (curDetail && state.students.some(s => s.id === curDetail)) detailSel.value = curDetail;
+}
+
+// ==================== FORMULAIRE GRILLE E5-E8 ====================
+function renderCompetencyForm(existingScores = null, existingObs = null) {
+  const unit = document.getElementById('evalUnit').value;
+  const ref = REFERENTIEL[unit];
+  const tbody = document.getElementById('competencyFormBody');
+
+  if (!existingScores) {
+    currentFormScores = {};
+    ref.competences.forEach(c => { currentFormScores[c.code] = 0; });
+  } else {
+    currentFormScores = { ...existingScores };
+  }
+
+  tbody.innerHTML = ref.competences.map(c => {
+    const val = currentFormScores[c.code] || 0;
+    const obsVal = existingObs && existingObs[c.code] ? existingObs[c.code] : '';
+    return `
+      <tr>
+        <td><strong>${c.code}</strong></td>
+        <td><strong>${c.label}</strong></td>
+        <td style="color:var(--muted); font-size:0.8rem;">${c.activities}</td>
+        <td>
+          <div class="tax-group" id="tax-grp-${c.code}">
+            ${[0, 1, 2, 3, 4].map(lvl => `
+              <button type="button" class="tax-btn ${val === lvl ? 'sel-' + lvl : ''}"
+                onclick="setCompScore('${c.code}', ${lvl})">
+                ${lvl === 0 ? 'NE' : 'Niv.' + lvl}
+              </button>
+            `).join('')}
+          </div>
+        </td>
+        <td>
+          <input type="text" id="obs-${c.code}" value="${escapeHtml(obsVal)}" placeholder="Observation / TP réalisé...">
+        </td>
+      </tr>
+    `;
+  }).join('');
+  updateLiveGridAverage();
+}
+
+function setCompScore(code, lvl) {
+  currentFormScores[code] = lvl;
+  const grp = document.getElementById('tax-grp-' + code);
+  if (grp) {
+    Array.from(grp.children).forEach((btn, idx) => {
+      btn.className = 'tax-btn' + (idx === lvl ? ' sel-' + lvl : '');
+    });
+  }
+  updateLiveGridAverage();
+}
+
+function updateLiveGridAverage() {
+  const vals = Object.values(currentFormScores).filter(v => v > 0);
+  const el = document.getElementById('liveGridAverage');
+  if (vals.length === 0) {
+    el.textContent = 'Moyenne de cette grille : Non évaluée';
+  } else {
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    el.textContent = `Moyenne de cette grille : ${avg.toFixed(2)} / 4  (soit ${(avg * 5).toFixed(2)} / 20)`;
+  }
+}
+
+function resetEvalForm() {
+  editingGridId = null;
+  document.getElementById('editingBadge').style.display = 'none';
+  document.getElementById('evalActivityTitle').value = '';
+  document.getElementById('evalContext').value = '';
+  document.getElementById('evalGlobalComment').value = '';
+  document.getElementById('evalDate').valueAsDate = new Date();
+  document.getElementById('evalSemester').value = state.currentSemester;
+  renderCompetencyForm();
+}
+
+function saveGrid(alsoPDF = false) {
+  const studentId = document.getElementById('evalStudent').value;
+  if (!studentId) return showToast('Sélectionnez un étudiant (ajoutez-le d’abord dans l’Index).');
+  const student = state.students.find(s => s.id === studentId);
+  const unit = document.getElementById('evalUnit').value;
+  const date = document.getElementById('evalDate').value || new Date().toISOString().slice(0, 10);
+  const semester = document.getElementById('evalSemester').value;
+  const activityTitle = document.getElementById('evalActivityTitle').value.trim() || `Évaluation ${unit} du ${date}`;
+  const context = document.getElementById('evalContext').value.trim();
+  const globalComment = document.getElementById('evalGlobalComment').value.trim();
+
+  const obs = {};
+  REFERENTIEL[unit].competences.forEach(c => {
+    const inp = document.getElementById('obs-' + c.code);
+    obs[c.code] = inp ? inp.value.trim() : '';
+  });
+
+  const hasScore = Object.values(currentFormScores).some(v => v > 0);
+  if (!hasScore) {
+    return showToast('Attribuez au moins un niveau taxonomique (1 à 4) avant d’enregistrer.');
+  }
+
+  const gridObj = {
+    id: editingGridId || generateId('grd'),
+    unit,
+    studentId,
+    studentName: student ? student.name : 'Inconnu',
+    date,
+    semester,
+    activityTitle,
+    context,
+    scores: { ...currentFormScores },
+    obs,
+    globalComment,
+    updatedAt: new Date().toISOString()
+  };
+
+  if (editingGridId) {
+    const idx = state.grids.findIndex(g => g.id === editingGridId);
+    if (idx !== -1) state.grids[idx] = gridObj;
+    showToast('Grille mise à jour !');
+  } else {
+    state.grids.unshift(gridObj);
+    showToast(`Grille ${unit} enregistrée pour ${gridObj.studentName} !`);
+  }
+
+  saveState();
+  if (alsoPDF) {
+    openGridModal(gridObj.id, true);
+  }
+  resetEvalForm();
+}
+
+function editGrid(id) {
+  const g = state.grids.find(x => x.id === id);
+  if (!g) return;
+  editingGridId = g.id;
+  switchTab('grille');
+  document.getElementById('editingBadge').style.display = 'inline-block';
+  document.getElementById('evalUnit').value = g.unit;
+  // S'assurer que l'étudiant existe dans le select
+  if (!state.students.some(s => s.id === g.studentId)) {
+    state.students.push({ id: g.studentId, name: g.studentName, group: '' });
+    populateStudentDropdowns();
+  }
+  document.getElementById('evalStudent').value = g.studentId;
+  document.getElementById('evalDate').value = g.date;
+  document.getElementById('evalSemester').value = g.semester;
+  document.getElementById('evalActivityTitle').value = g.activityTitle;
+  document.getElementById('evalContext').value = g.context || '';
+  document.getElementById('evalGlobalComment').value = g.globalComment || '';
+  renderCompetencyForm(g.scores, g.obs);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteGrid(id) {
+  if (!confirm('Supprimer définitivement cette grille évaluée ?')) return;
+  state.grids = state.grids.filter(g => g.id !== id);
+  saveState();
+  renderArchives();
+  showToast('Grille supprimée.');
+}
+
+// ==================== ARCHIVES, APERÇU PDF & RÉINTÉGRATION JSON ====================
+function computeGridAvg(g) {
+  const vals = Object.values(g.scores || {}).filter(v => v > 0);
+  if (vals.length === 0) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function renderArchives() {
+  document.getElementById('badgeGrids').textContent = state.grids.length;
+  const fSem = document.getElementById('filterSem').value;
+  const fUnit = document.getElementById('filterUnit').value;
+  const fStu = document.getElementById('filterStudent').value;
+  const fSearch = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+  const filtered = state.grids.filter(g => {
+    if (fSem !== 'ALL' && g.semester !== fSem) return false;
+    if (fUnit !== 'ALL' && g.unit !== fUnit) return false;
+    if (fStu !== 'ALL' && g.studentId !== fStu) return false;
+    if (fSearch && !(g.activityTitle + ' ' + (g.context || '') + ' ' + g.studentName).toLowerCase().includes(fSearch)) return false;
+    return true;
+  });
+
+  const container = document.getElementById('archivesListContainer');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--muted);">Aucune grille trouvée pour ces filtres.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(g => {
+    const avg = computeGridAvg(g);
+    const pills = Object.entries(g.scores).map(([code, lvl]) =>
+      `<span class="pill pill-${lvl}">${code}: ${lvl === 0 ? 'NE' : 'Niv.' + lvl}</span>`
+    ).join(' ');
+    return `
+      <div class="archive-item">
+        <div style="flex:1; min-width:260px;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
+            <span class="pill pill-3">${g.unit}</span>
+            <span class="pill pill-0">${g.semester}</span>
+            <strong>${escapeHtml(g.studentName)}</strong>
+            <span style="color:var(--muted); font-size:0.8rem;">• ${g.date}</span>
+          </div>
+          <div style="font-weight:600; color:#0f172a; margin-bottom:0.3rem;">${escapeHtml(g.activityTitle)}</div>
+          <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">${pills}</div>
+        </div>
+        <div style="text-align:right; min-width:120px;">
+          <div style="font-weight:800; color:var(--primary); font-size:1rem;">${avg ? avg.toFixed(2) + ' / 4' : '—'}</div>
+          <div style="font-size:0.78rem; color:var(--muted);">${avg ? (avg * 5).toFixed(1) + ' / 20' : ''}</div>
+        </div>
+        <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="openGridModal('${g.id}', false)">👁️ Revoir / PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="downloadSingleGridJSON('${g.id}')">💾 JSON</button>
+          <button class="btn btn-primary btn-sm" onclick="editGrid('${g.id}')">✏️ Modifier</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGrid('${g.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openGridModal(id, autoDownloadPDF = false) {
+  const g = state.grids.find(x => x.id === id);
+  if (!g) return;
+  currentModalGrid = g;
+  const ref = REFERENTIEL[g.unit];
+  const avg = computeGridAvg(g);
+
+  const rowsHtml = ref.competences.map(c => {
+    const lvl = g.scores[c.code] || 0;
+    return `
+      <tr>
+        <td><strong>${c.code}</strong></td>
+        <td>${c.label}</td>
+        <td style="font-size:0.8rem; color:#475569;">${c.activities}</td>
+        <td style="text-align:center; font-weight:700;">${lvl === 0 ? 'Non évalué' : 'Niveau ' + lvl}</td>
+        <td>${escapeHtml((g.obs && g.obs[c.code]) || '')}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('modalPrintArea').innerHTML = `
+    <div style="border:2px solid #1e3a8a; border-radius:8px; padding:1.25rem; background:white;">
+      <div style="background:#1e3a8a; color:white; padding:0.85rem 1rem; border-radius:6px; margin-bottom:1rem;">
+        <div style="font-size:1.1rem; font-weight:700;">GRILLE D'ÉVALUATION BTS MV — ${ref.title}</div>
+        <div style="font-size:0.82rem; opacity:0.9;">Semestre ${g.semester} • Date : ${g.date}</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:1rem; font-size:0.9rem; background:#f8fafc; padding:0.75rem; border-radius:6px; border:1px solid #cbd5e1;">
+        <div><strong>Étudiant :</strong> ${escapeHtml(g.studentName)}</div>
+        <div><strong>Moyenne grille :</strong> ${avg ? avg.toFixed(2) + ' / 4 (' + (avg * 5).toFixed(2) + ' / 20)' : 'Non évaluée'}</div>
+        <div style="grid-column:1/-1;"><strong>Activité / TP :</strong> ${escapeHtml(g.activityTitle)}</div>
+        ${g.context ? `<div style="grid-column:1/-1;"><strong>Support / Contexte :</strong> ${escapeHtml(g.context)}</div>` : ''}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Compétence</th>
+            <th>Activités professionnelles</th>
+            <th>Niveau (1 à 4)</th>
+            <th>Observations</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      ${g.globalComment ? `<div style="margin-top:0.9rem; padding:0.7rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px;"><strong>Bilan global :</strong> ${escapeHtml(g.globalComment)}</div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('modalJsonBtn').onclick = () => downloadSingleGridJSON(g.id);
+  document.getElementById('gridModal').classList.add('open');
+
+  if (autoDownloadPDF) {
+    setTimeout(() => downloadModalPDF(), 300);
+  }
+}
+
+function closeModal() {
+  document.getElementById('gridModal').classList.remove('open');
+}
+
+function downloadModalPDF() {
+  if (!currentModalGrid) return;
+  const el = document.getElementById('modalPrintArea');
+  const fname = `Grille_${currentModalGrid.unit}_${currentModalGrid.studentName.replace(/\s+/g, '_')}_${currentModalGrid.date}.pdf`;
+  html2pdf().set({
+    margin: 10,
+    filename: fname,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  }).from(el).save();
+}
+
+function downloadSingleGridJSON(id) {
+  const g = state.grids.find(x => x.id === id);
+  if (!g) return;
+  const payload = {
+    type: 'BTS_MV_GRILLE_UNIQUE',
+    exportedAt: new Date().toISOString(),
+    grid: g
+  };
+  downloadJSONFile(payload, `Grille_${g.unit}_${g.studentName.replace(/\s+/g, '_')}_${g.date}.json`);
+}
+
+function exportFullBackupJSON() {
+  const payload = {
+    type: 'BTS_MV_BASE_COMPLETE',
+    exportedAt: new Date().toISOString(),
+    data: state
+  };
+  downloadJSONFile(payload, `BTS_MV_Sauvegarde_E5_E8_${new Date().toISOString().slice(0, 10)}.json`);
+  showToast('Base JSON complète exportée.');
+}
+
+function downloadJSONFile(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function importJSONFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed.type === 'BTS_MV_BASE_COMPLETE' && parsed.data) {
+        state = parsed.data;
+        saveState();
+        showToast('Base complète restaurée avec succès !');
+      } else if (parsed.type === 'BTS_MV_GRILLE_UNIQUE' && parsed.grid) {
+        mergeSingleGrid(parsed.grid);
+        saveState();
+        showToast('Grille individuelle réintégrée !');
+      } else if (Array.isArray(parsed.students) && Array.isArray(parsed.grids)) {
+        state = parsed;
+        saveState();
+        showToast('Sauvegarde chargée !');
+      } else {
+        showToast('Format JSON non reconnu.');
+      }
+    } catch (err) {
+      showToast('Erreur de lecture du fichier JSON.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function reintegrateGridsJSON(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  let count = 0;
+  let processed = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (parsed.type === 'BTS_MV_GRILLE_UNIQUE' && parsed.grid) {
+          mergeSingleGrid(parsed.grid);
+          count++;
+        } else if (parsed.type === 'BTS_MV_BASE_COMPLETE' && parsed.data && Array.isArray(parsed.data.grids)) {
+          parsed.data.grids.forEach(g => { mergeSingleGrid(g); count++; });
+        }
+      } catch (err) { console.error(err); }
+      processed++;
+      if (processed === files.length) {
+        saveState();
+        renderArchives();
+        showToast(`${count} grille(s) réintégrée(s) dans le suivi !`);
+      }
+    };
+    reader.readAsText(file);
+  });
+  event.target.value = '';
+}
+
+function mergeSingleGrid(g) {
+  // Vérifier si l'étudiant existe sinon l'ajouter à l'index
+  let stu = state.students.find(s => s.id === g.studentId || s.name.toLowerCase() === (g.studentName || '').toLowerCase());
+  if (!stu && g.studentName) {
+    stu = { id: g.studentId || generateId('stu'), name: g.studentName, group: '' };
+    state.students.push(stu);
+  }
+  if (stu) g.studentId = stu.id;
+
+  const existingIdx = state.grids.findIndex(x => x.id === g.id);
+  if (existingIdx !== -1) {
+    state.grids[existingIdx] = g;
+  } else {
+    state.grids.unshift(g);
+  }
+}
+
+// ==================== CALCULS SEMESTRIELS & SYNTHÈSE ====================
+function getStudentSemesterStats(studentId, semester) {
+  const stuGrids = state.grids.filter(g => g.studentId === studentId && g.semester === semester);
+  const compStats = {}; // code -> { avg, count, activities: [] }
+
+  Object.entries(REFERENTIEL).forEach(([unitKey, ref]) => {
+    ref.competences.forEach(c => {
+      const relevant = stuGrids.filter(g => g.unit === unitKey && g.scores && g.scores[c.code] > 0);
+      if (relevant.length > 0) {
+        const sum = relevant.reduce((acc, g) => acc + g.scores[c.code], 0);
+        const avg = sum / relevant.length;
+        const acts = relevant.map(g => `${g.activityTitle} (Niv.${g.scores[c.code]}${g.obs && g.obs[c.code] ? ' - ' + g.obs[c.code] : ''})`);
+        compStats[c.code] = { avg, count: relevant.length, activities: acts };
+      } else {
+        compStats[c.code] = { avg: null, count: 0, activities: [] };
+      }
+    });
+  });
+
+  const unitAvgs = {};
+  ['E5', 'E6', 'E7', 'E8'].forEach(u => {
+    const codes = REFERENTIEL[u].competences.map(c => c.code);
+    const validAvgs = codes.map(code => compStats[code].avg).filter(v => v !== null);
+    unitAvgs[u] = validAvgs.length > 0 ? (validAvgs.reduce((a, b) => a + b, 0) / validAvgs.length) : null;
+  });
+
+  const validUnits = Object.values(unitAvgs).filter(v => v !== null);
+  const globalAvg4 = validUnits.length > 0 ? (validUnits.reduce((a, b) => a + b, 0) / validUnits.length) : null;
+  const globalNote20 = globalAvg4 !== null ? globalAvg4 * 5 : null;
+
+  return {
+    gridCount: stuGrids.length,
+    compStats,
+    unitAvgs,
+    globalAvg4,
+    globalNote20
+  };
+}
+
+function renderPromoSynthesis() {
+  const sem = state.currentSemester;
+  document.getElementById('synthSemTitle').textContent = `Semestre ${sem.replace('S', '')} (${sem})`;
+  const tbody = document.getElementById('promoSynthBody');
+
+  if (state.students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--muted);">Ajoutez des étudiants dans l'Index pour afficher la synthèse.</td></tr>`;
+    return;
+  }
+
+  let sums = { E5: [], E6: [], E7: [], E8: [], G4: [], G20: [] };
+
+  const rows = state.students.map(s => {
+    const st = getStudentSemesterStats(s.id, sem);
+    if (st.unitAvgs.E5 !== null) sums.E5.push(st.unitAvgs.E5);
+    if (st.unitAvgs.E6 !== null) sums.E6.push(st.unitAvgs.E6);
+    if (st.unitAvgs.E7 !== null) sums.E7.push(st.unitAvgs.E7);
+    if (st.unitAvgs.E8 !== null) sums.E8.push(st.unitAvgs.E8);
+    if (st.globalAvg4 !== null) sums.G4.push(st.globalAvg4);
+    if (st.globalNote20 !== null) sums.G20.push(st.globalNote20);
+
+    const fmt = v => v !== null ? v.toFixed(2) : '<span style="color:#94a3b8;">—</span>';
+    return `
+      <tr>
+        <td><strong>${escapeHtml(s.name)}</strong></td>
+        <td style="text-align:center;">${st.gridCount}</td>
+        <td style="text-align:center;">${fmt(st.unitAvgs.E5)}</td>
+        <td style="text-align:center;">${fmt(st.unitAvgs.E6)}</td>
+        <td style="text-align:center;">${fmt(st.unitAvgs.E7)}</td>
+        <td style="text-align:center;">${fmt(st.unitAvgs.E8)}</td>
+        <td style="text-align:center; font-weight:700; color:var(--primary);">${fmt(st.globalAvg4)}</td>
+        <td style="text-align:center; font-weight:800; background:#eff6ff; color:#1e3a8a;">${st.globalNote20 !== null ? st.globalNote20.toFixed(2) + ' / 20' : '—'}</td>
+        <td style="text-align:center;">
+          <button class="btn btn-outline btn-sm" onclick="selectDetailStudent('${s.id}')">👁️ Voir fiche</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const avgArr = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : '—';
+  const footer = `
+    <tr style="background:#e2e8f0; font-weight:800;">
+      <td>MOYENNE PROMOTION</td>
+      <td style="text-align:center;">—</td>
+      <td style="text-align:center;">${avgArr(sums.E5)}</td>
+      <td style="text-align:center;">${avgArr(sums.E6)}</td>
+      <td style="text-align:center;">${avgArr(sums.E7)}</td>
+      <td style="text-align:center;">${avgArr(sums.E8)}</td>
+      <td style="text-align:center;">${avgArr(sums.G4)}</td>
+      <td style="text-align:center;">${avgArr(sums.G20)} ${sums.G20.length ? '/ 20' : ''}</td>
+      <td></td>
+    </tr>
+  `;
+
+  tbody.innerHTML = rows + footer;
+}
+
+function selectDetailStudent(id) {
+  document.getElementById('detailStudentSelect').value = id;
+  renderStudentDetail();
+  document.getElementById('studentDetailCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderStudentDetail() {
+  const stuId = document.getElementById('detailStudentSelect').value;
+  const container = document.getElementById('studentDetailContent');
+  if (!stuId) {
+    container.innerHTML = '<p style="color:var(--muted);">Aucun étudiant sélectionné.</p>';
+    return;
+  }
+  const stu = state.students.find(s => s.id === stuId);
+  const sem = state.currentSemester;
+  const st = getStudentSemesterStats(stuId, sem);
+
+  let rowsHtml = '';
+  Object.entries(REFERENTIEL).forEach(([unitKey, ref]) => {
+    ref.competences.forEach(c => {
+      const cs = st.compStats[c.code];
+      const roundedLvl = cs.avg !== null ? Math.round(cs.avg) : 0;
+      const statusText = cs.avg !== null
+        ? `${TAXO_LABELS[roundedLvl]} (Moy. ${cs.avg.toFixed(2)}/4 sur ${cs.count} act.)`
+        : 'Non évalué';
+      const actsHtml = cs.activities.length > 0
+        ? `<ul style="margin:0; padding-left:1.1rem; font-size:0.8rem;">${cs.activities.map(a => `<li>${escapeHtml(a)}</li>`).join('')}</ul>`
+        : '<span style="color:#94a3b8; font-size:0.8rem;">Aucune activité évaluée sur ce semestre</span>';
+
+      rowsHtml += `
+        <tr>
+          <td style="font-weight:600; font-size:0.8rem;">${ref.title}</td>
+          <td><strong>${c.code}</strong></td>
+          <td>${c.label}</td>
+          <td style="font-size:0.8rem; color:#475569;">${c.activities}</td>
+          <td style="text-align:center; font-weight:800; color:var(--primary);">${cs.avg !== null ? cs.avg.toFixed(2) : '—'}</td>
+          <td><span class="pill pill-${roundedLvl}">${statusText}</span></td>
+          <td>${actsHtml}</td>
+        </tr>
+      `;
+    });
+  });
+
+  container.innerHTML = `
+    <div id="studentPrintableArea">
+      <div style="background:#0f172a; color:white; padding:0.8rem 1rem; border-radius:6px; margin-bottom:0.85rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <strong>FICHE INDIVIDUELLE DE SUIVI — ${escapeHtml(stu.name).toUpperCase()}</strong>
+          <div style="font-size:0.8rem; color:#cbd5e1;">BTS Maintenance des Véhicules • Semestre ${sem} • ${st.gridCount} grille(s) prise(s) en compte</div>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:1.1rem; font-weight:800; color:#38bdf8;">Note Semestrielle : ${st.globalNote20 !== null ? st.globalNote20.toFixed(2) + ' / 20' : 'Non évaluée'}</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Unité (Épreuve)</th>
+              <th>Code</th>
+              <th>Intitulé de la compétence</th>
+              <th>Activités de référence</th>
+              <th style="text-align:center;">Moy. (/4)</th>
+              <th>Statut d'acquisition</th>
+              <th>Activités réalisées & Observations (${sem})</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function exportStudentSheetPDF() {
+  const stuId = document.getElementById('detailStudentSelect').value;
+  const stu = state.students.find(s => s.id === stuId);
+  if (!stu) return;
+  const el = document.getElementById('studentPrintableArea');
+  html2pdf().set({
+    margin: 8,
+    filename: `Fiche_Suivi_${stu.name.replace(/\s+/g, '_')}_${state.currentSemester}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  }).from(el).save();
+}
+
+// ==================== EXPORT EXCEL MULTI-ONGLETS (.XLSX) ====================
+function sanitizeSheetName(name, usedNames) {
+  let clean = name.replace(/[\\\/\?\*\[\]:]/g, '').trim().replace(/\s+/g, '_').slice(0, 28);
+  if (!clean) clean = 'Etudiant';
+  let candidate = clean;
+  let counter = 2;
+  while (usedNames.has(candidate.toLowerCase())) {
+    candidate = clean.slice(0, 25) + '_' + counter++;
+  }
+  usedNames.add(candidate.toLowerCase());
+  return candidate;
+}
+
+function exportGlobalExcel() {
+  if (state.students.length === 0) {
+    return showToast('Ajoutez d’abord des étudiants dans l’Index avant d’exporter.');
+  }
+
+  const sem = state.currentSemester;
+  const wb = XLSX.utils.book_new();
+  const usedSheetNames = new Set(['synthèse_promotion']);
+
+  // Préparer les noms d'onglets uniques par étudiant
+  const studentSheets = state.students.map(s => ({
+    student: s,
+    sheetName: sanitizeSheetName(s.name, usedSheetNames)
+  }));
+
+  // 1. Onglet Synthèse_Promotion (fidèle à votre modèle)
+  const synthData = [
+    [`SUIVI DES COMPÉTENCES & NIVEAUX TAXONOMIQUES — BTS MV (U5 à U8) — ${sem}`],
+    ['Tableau de bord récapitulatif par étudiant (Niveaux taxonomiques de 1 à 4 — Moyennes semestrielles calculées automatiquement)'],
+    [],
+    ['Échelle des niveaux taxonomiques :'],
+    ['Niveau 1', 'Niveau 1 : Découverte / Information (Restituer, identifier)'],
+    ['Niveau 2', 'Niveau 2 : Expression / Compréhension (Expliquer, analyser)'],
+    ['Niveau 3', "Niveau 3 : Maîtrise d'outils / Application (Mettre en œuvre, diagnostiquer)"],
+    ['Niveau 4', 'Niveau 4 : Maîtrise méthodologique / Expertise (Concevoir, optimiser, autonomie)'],
+    [],
+    ['Étudiant', 'Onglet', 'Nb Activités', 'Moy. U5', 'Moy. U6', 'Moy. U7', 'Moy. U8', 'Moyenne Générale (/4)', 'Équivalent (/20)']
+  ];
+
+  studentSheets.forEach(({ student, sheetName }, idx) => {
+    const r = 11 + idx; // Ligne Excel 1-indexed
+    const st = getStudentSemesterStats(student.id, sem);
+    // Formules dynamiques pointant vers l'onglet individuel de l'étudiant (lignes 6..9 = U5, 10..12 = U6, 13..15 = U7, 16..17 = U8)
+    synthData.push([
+      student.name,
+      sheetName,
+      st.gridCount,
+      { f: `IFERROR(AVERAGE('${sheetName}'!E6:E9), 0)` },
+      { f: `IFERROR(AVERAGE('${sheetName}'!E10:E12), 0)` },
+      { f: `IFERROR(AVERAGE('${sheetName}'!E13:E15), 0)` },
+      { f: `IFERROR(AVERAGE('${sheetName}'!E16:E17), 0)` },
+      { f: `AVERAGE(D${r}:G${r})` },
+      { f: `H${r}*5` }
+    ]);
+  });
+
+  const lastRow = 10 + studentSheets.length;
+  synthData.push([
+    'MOYENNE PROMOTION',
+    '-',
+    { f: `SUM(C11:C${lastRow})` },
+    { f: `AVERAGE(D11:D${lastRow})` },
+    { f: `AVERAGE(E11:E${lastRow})` },
+    { f: `AVERAGE(F11:F${lastRow})` },
+    { f: `AVERAGE(G11:G${lastRow})` },
+    { f: `AVERAGE(H11:H${lastRow})` },
+    { f: `AVERAGE(I11:I${lastRow})` }
+  ]);
+
+  const wsSynth = XLSX.utils.aoa_to_sheet(synthData);
+  wsSynth['!cols'] = [
+    { wch: 24 }, { wch: 20 }, { wch: 13 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 22 }, { wch: 18 }
+  ];
+  XLSX.utils.book_append_sheet(wb, wsSynth, 'Synthèse_Promotion');
+
+  // 2. Onglets individuels par étudiant
+  studentSheets.forEach(({ student, sheetName }) => {
+    const st = getStudentSemesterStats(student.id, sem);
+    const sheetRows = [
+      [`FICHE INDIVIDUELLE DE SUIVI — ${student.name.toUpperCase()} (${sem})`],
+      ["BTS Maintenance des Véhicules — Grille d'évaluation par unités (U5, U6, U7, U8), activités et niveaux taxonomiques"],
+      ['← Retour Synthèse Promotion'],
+      [],
+      ['Unité (Épreuve)', 'Code Comp.', 'Intitulé de la compétence', 'Liste des activités professionnelles associées', 'Niveau Taxonomique (1 à 4)', "Statut d'acquisition", `Activités réalisées & Observations (${sem})`]
+    ];
+
+    let excelRow = 6;
+    Object.entries(REFERENTIEL).forEach(([unitKey, ref]) => {
+      ref.competences.forEach(c => {
+        const cs = st.compStats[c.code];
+        const avgVal = cs.avg !== null ? Number(cs.avg.toFixed(2)) : '';
+        const obsConcat = cs.activities.length > 0 ? cs.activities.join(' | ') : '';
+        sheetRows.push([
+          ref.title,
+          c.code,
+          c.label,
+          c.activities,
+          avgVal,
+          { f: `IF(E${excelRow}="","Non évalué",IF(ROUND(E${excelRow},0)=1,"Niveau 1 - Découverte",IF(ROUND(E${excelRow},0)=2,"Niveau 2 - En cours",IF(ROUND(E${excelRow},0)=3,"Niveau 3 - Acquis","Niveau 4 - Maîtrisé"))))` },
+          obsConcat
+        ]);
+        excelRow++;
+      });
+    });
+
+    sheetRows.push([]);
+    sheetRows.push(['BILAN PAR UNITÉ']);
+    sheetRows.push(['Moyenne U5 (Diagnostic et maintenance)', '', '', '', { f: 'IFERROR(AVERAGE(E6:E9), 0)' }, { f: 'E20*5' }]);
+    sheetRows.push(['Moyenne U6 (Intervention systèmes complexes)', '', '', '', { f: 'IFERROR(AVERAGE(E10:E12), 0)' }, { f: 'E21*5' }]);
+    sheetRows.push(["Moyenne U7 (Organisation et gestion d'atelier)", '', '', '', { f: 'IFERROR(AVERAGE(E13:E15), 0)' }, { f: 'E22*5' }]);
+    sheetRows.push(['Moyenne U8 (Projet technique et innovation)', '', '', '', { f: 'IFERROR(AVERAGE(E16:E17), 0)' }, { f: 'E23*5' }]);
+
+    const wsStu = XLSX.utils.aoa_to_sheet(sheetRows);
+    wsStu['!cols'] = [
+      { wch: 34 }, { wch: 11 }, { wch: 44 }, { wch: 46 }, { wch: 24 }, { wch: 24 }, { wch: 55 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsStu, sheetName);
+  });
+
+  XLSX.writeFile(wb, `Suivi_Competences_U5_U8_Par_Eleve_${sem}.xlsx`);
+  showToast(`Fichier Excel généré pour ${sem} (${studentSheets.length} onglets élèves) !`);
+}
+
+// ==================== UTILITAIRES & INIT ====================
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function refreshAllUI() {
+  renderStudentsTable();
+  populateStudentDropdowns();
+  renderArchives();
+  renderPromoSynthesis();
+  renderStudentDetail();
+}
+
+// Initialisation au chargement
+loadState();
+renderCompetencyForm();
+refreshAllUI();
+</script>
+</body>
+</html>

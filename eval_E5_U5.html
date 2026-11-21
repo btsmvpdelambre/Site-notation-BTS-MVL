@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grille d'Évaluation BTS MV — Épreuve E5 (U5) | Diagnostic des Systèmes (C1.1 à C1.4)</title>
+    <!-- Chargement de Tailwind CSS pour une mise en page moderne et responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Police Inter pour une lisibilité optimale -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fee2e2;
+            background-image: linear-gradient(180deg, #fef2f2 0%, #fecaca 100%);
+            background-attachment: fixed;
+            color: #0f172a;
+        }
+
+        /* Personnalisation du curseur de notation (0.0 à 4.0 par pas de 0.2) */
+        input[type="range"].score-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            outline: none;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        input[type="range"].score-slider:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        input[type="range"].score-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #2563eb;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+
+        input[type="range"].score-slider:disabled::-webkit-slider-thumb {
+            background: #94a3b8 !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        input[type="range"].score-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        input[type="range"].score-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #2563eb;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+
+        input[type="range"].score-slider:disabled::-moz-range-thumb {
+            background: #94a3b8 !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Couleurs dynamiques du pouce du curseur selon la note */
+        input[type="range"].level-1::-webkit-slider-thumb { background: #ef4444; }
+        input[type="range"].level-2::-webkit-slider-thumb { background: #f59e0b; }
+        input[type="range"].level-3::-webkit-slider-thumb { background: #10b981; }
+        input[type="range"].level-4::-webkit-slider-thumb { background: #2563eb; }
+
+        input[type="range"].level-1::-moz-range-thumb { background: #ef4444; }
+        input[type="range"].level-2::-moz-range-thumb { background: #f59e0b; }
+        input[type="range"].level-3::-moz-range-thumb { background: #10b981; }
+        input[type="range"].level-4::-moz-range-thumb { background: #2563eb; }
+
+        /* Barre de défilement fine pour la liste des 30 étudiants */
+        .student-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .student-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .student-scroll::-webkit-scrollbar-thumb {
+            background: #fca5a5;
+            border-radius: 999px;
+        }
+        .student-scroll::-webkit-scrollbar-thumb:hover {
+            background: #f87171;
+        }
+
+        /* Styles spécifiques pour l'impression et l'export PDF */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 10.5pt;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .sticky-header {
+                position: static !important;
+                box-shadow: none !important;
+                border-bottom: 2px solid #000 !important;
+            }
+            .card-critere {
+                break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                margin-bottom: 1rem !important;
+            }
+            .indicator-row {
+                break-inside: avoid;
+            }
+            input[type="range"] {
+                display: none !important;
+            }
+            select, input[type="text"], input[type="date"], textarea {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Bandeau supérieur fixe avec la note en temps réel -->
+    <header class="sticky top-0 z-40 bg-red-50/95 backdrop-blur border-b border-red-200 shadow-sm sticky-header">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Titre & Référentiel -->
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-900 text-white uppercase tracking-wider">
+                            BTS Maintenance des Véhicules (Rénové 2028)
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                            Épreuve E5 (U5 — Coeff. 8) • Bloc 1 : C1.1, C1.2, C1.3 &amp; C1.4
+                        </span>
+                        <span id="header-active-student-pill" class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
+                            Étudiant #1
+                        </span>
+                    </div>
+                    <h1 id="header-project-title" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">Réalisation du Diagnostic des Systèmes des Véhicules</h1>
+                </div>
+
+                <!-- Bloc Note Finale /20 + Barre de progression -->
+                <div class="flex items-center justify-between sm:justify-end gap-4 bg-white/90 px-4 py-2.5 rounded-xl border border-red-200 shadow-xs">
+                    <div class="text-right">
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Note Globale Pondérée</div>
+                        <div class="flex items-center justify-end gap-2 mt-0.5 flex-wrap">
+                            <span id="appreciation-badge" class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-800">Très bien</span>
+                            <span id="raw-points-display" class="text-xs text-slate-500 font-medium">(0.0 / 0.0 pts)</span>
+                        </div>
+                        <div id="evaluated-count-display" class="text-[11px] text-slate-400 font-medium mt-0.5">0 / 0 éléments observés évalués</div>
+                        <!-- Barre de progression -->
+                        <div class="w-40 sm:w-48 h-2 bg-slate-200 rounded-full overflow-hidden mt-1 ml-auto">
+                            <div id="global-progress-bar" class="h-full bg-blue-600 transition-all duration-300" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline bg-red-50 px-3.5 py-2 rounded-xl border-2 border-blue-600 shadow-sm">
+                        <span id="final-grade" class="text-3xl sm:text-4xl font-black text-blue-700 tracking-tight">15.00</span>
+                        <span class="text-base font-bold text-slate-400 ml-1">/20</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Structure principale avec barre latérale gauche (30 onglets étudiants) + Grille d'évaluation -->
+    <div class="flex-grow max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6 items-start">
+
+        <!-- BARRE LATÉRALE GAUCHE : Liste des 30 étudiants (Onglets cliquables et modifiables) -->
+        <aside class="w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-24 bg-white/95 rounded-2xl shadow-sm border border-red-200 p-4 flex flex-col max-h-[55vh] lg:max-h-[calc(100vh-7.5rem)] no-print">
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-red-100">
+                <div>
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Liste des étudiants (30)
+                    </h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Cliquez pour changer de grille ou renommez</p>
+                </div>
+                <button type="button" onclick="openBulkNamesModal()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition cursor-pointer shrink-0" title="Coller une liste de 30 noms en une fois">
+                    Éditer la liste
+                </button>
+            </div>
+
+            <!-- Liste défilante des 30 onglets étudiants -->
+            <div id="student-tabs-list" class="mt-3 space-y-1.5 overflow-y-auto pr-1 student-scroll flex-grow"></div>
+
+            <!-- Astuce rapide en bas de la barre latérale -->
+            <div class="mt-3 pt-2.5 border-t border-red-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Sauvegarde auto navigateur</span>
+                <span class="font-bold text-blue-700" id="sidebar-active-counter">1 / 30</span>
+            </div>
+        </aside>
+
+        <!-- COLONNE DE DROITE : Contenu Principal de la grille active -->
+        <main class="flex-grow min-w-0 w-full space-y-6">
+
+            <!-- Informations Candidat & Boutons d'action -->
+            <section class="bg-white/95 rounded-2xl shadow-sm border border-red-200 p-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-red-100 no-print">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Identification de la situation d'évaluation (CCF / Projet 60h &amp; Soutenance 50 min) &amp; Actions
+                    </h2>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Input caché pour l'importation de fichier JSON -->
+                        <input type="file" id="json-file-input" accept=".json,application/json" class="hidden" onchange="importEvaluationJSON(event)">
+                        
+                        <!-- Bouton Enregistrer la classe / l'évaluation (Export JSON) -->
+                        <button type="button" onclick="exportEvaluationJSON()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer" title="Enregistrer les 30 grilles d'évaluation dans un fichier JSON">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                            Enregistrer (JSON)
+                        </button>
+
+                        <!-- Bouton Importer une évaluation (Import JSON) -->
+                        <button type="button" onclick="triggerImportJSON()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 text-sky-800 border border-red-200 transition cursor-pointer" title="Charger une sauvegarde (.json)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Importer (JSON)
+                        </button>
+
+                        <!-- Bouton Exporter CSV / Excel -->
+                        <button type="button" onclick="exportCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" title="Exporter l'étudiant actif en CSV">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            CSV Étudiant
+                        </button>
+
+                        <!-- Bouton Exporter Synthèse Classe CSV -->
+                        <button type="button" onclick="exportAllStudentsCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 transition cursor-pointer" title="Exporter le récapitulatif des 30 étudiants en CSV">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            CSV Classe (30)
+                        </button>
+
+                        <!-- Bouton Imprimer / PDF -->
+                        <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            Imprimer / PDF
+                        </button>
+
+                        <!-- Bouton Réinitialiser -->
+                        <button type="button" onclick="openResetModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Réinitialiser
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    <div>
+                        <label for="project-title" class="block text-xs font-semibold text-slate-600 mb-1">Thématique du diagnostic / Support véhicule</label>
+                        <input type="text" id="project-title" placeholder="Ex : Perte de puissance, Défaut isolement HT, Bus CAN..." oninput="updateProjectTitle(); saveState()" class="w-full px-3.5 py-2 rounded-xl border border-red-200 bg-red-50/40 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="student-name" class="block text-xs font-semibold text-slate-600 mb-1">Nom &amp; Prénom du candidat</label>
+                        <input type="text" id="student-name" placeholder="Ex : DUPONT Lucas" oninput="onTopStudentNameInput(this.value)" class="w-full px-3.5 py-2 rounded-xl border border-red-200 bg-red-50/40 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="eval-date" class="block text-xs font-semibold text-slate-600 mb-1">Date de l'évaluation</label>
+                        <input type="date" id="eval-date" onchange="saveState()" class="w-full px-3.5 py-2 rounded-xl border border-red-200 bg-red-50/40 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="examiner-name" class="block text-xs font-semibold text-slate-600 mb-1">Examinateur(s) / Commission / Tuteur</label>
+                        <input type="text" id="examiner-name" placeholder="Ex : M. MARTIN (STI) / Mme DUBOIS (PC)" oninput="saveState()" class="w-full px-3.5 py-2 rounded-xl border border-red-200 bg-red-50/40 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Rappel réglementaire habilitations & option -->
+                <div class="mt-4 pt-3 border-t border-red-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-bold text-slate-700">Option BTS MV :</span>
+                        <label class="inline-flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="bts-option" value="VL" checked onchange="updateOption(this.value)" class="accent-blue-600">
+                            <span>Véhicules Légers (VL)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1 cursor-pointer ml-2">
+                            <input type="radio" name="bts-option" value="VTR" onchange="updateOption(this.value)" class="accent-blue-600">
+                            <span>Véhicules de Transport Routier (VTR)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1 cursor-pointer ml-2">
+                            <input type="radio" name="bts-option" value="Moto" onchange="updateOption(this.value)" class="accent-blue-600">
+                            <span>Motocycles</span>
+                        </label>
+                    </div>
+                    <div class="text-[11px] bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 text-slate-700">
+                        <strong>Prérequis réglementaires (Annexe III) :</strong> Habilitation électrique (B2VL/BCL ou B2XL batterie) &amp; Attestation fluides frigorigènes (Cat. V).
+                    </div>
+                </div>
+            </section>
+
+            <!-- Légende rapide de l'échelle de maîtrise sur toute la largeur -->
+            <section class="bg-white/95 rounded-2xl shadow-sm border border-red-200 p-4 no-print">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-600">Échelle de maîtrise progressive (Curseur 0.0 à 4.0 — pas de 0.2) &amp; Coefficient multiplicateur</div>
+                    <div class="text-xs text-slate-600">
+                        💡 <strong>Non évalué :</strong> Cochez « N/E » pour exclure un élément observé (ou « Critère non évalué » pour tout le bloc) et ajustez le coefficient du critère.
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+                    <div class="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-2 rounded-xl">
+                        <span class="px-1.5 py-0.5 rounded-md bg-red-500 text-white font-bold shrink-0">0.0 – 1.6</span>
+                        <span class="font-semibold text-red-900">Insuffisant</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
+                        <span class="px-1.5 py-0.5 rounded-md bg-amber-500 text-white font-bold shrink-0">1.8 – 2.4</span>
+                        <span class="font-semibold text-amber-900">Fragile</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl">
+                        <span class="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white font-bold shrink-0">2.6 – 3.4</span>
+                        <span class="font-semibold text-emerald-900">Satisfaisant</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl">
+                        <span class="px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-bold shrink-0">3.6 – 4.0</span>
+                        <span class="font-semibold text-blue-900">Expert</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-100 border border-slate-300 px-3 py-2 rounded-xl col-span-2 sm:col-span-1">
+                        <span class="px-1.5 py-0.5 rounded-md bg-slate-500 text-white font-bold shrink-0">N/E</span>
+                        <span class="font-semibold text-slate-700">Non évalué (exclu)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Titre de section : Paramètres observables & notation lors des activités pratiques -->
+            <section class="bg-blue-900 text-white rounded-2xl shadow-sm border border-blue-800 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-800 border border-blue-700 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Paramètres observables &amp; notation lors des activités pratiques</h2>
+                        <p class="text-xs text-sky-200">Évaluation critériée des compétences du Bloc 1 (C1.1 à C1.4) en situation professionnelle d'atelier ou de laboratoire</p>
+                    </div>
+                </div>
+                <div class="text-xs font-semibold bg-blue-800/80 border border-blue-700 px-3 py-1.5 rounded-lg text-sky-100 self-start sm:self-center">
+                    Autonomie attendue : <span class="text-white font-bold">Totale</span>
+                </div>
+            </section>
+
+            <!-- Barre de filtre rapide par compétence -->
+            <section class="flex flex-wrap items-center justify-between gap-3 bg-white/95 rounded-2xl shadow-sm border border-red-200 px-5 py-3 no-print">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mr-1">Filtrer l'affichage :</span>
+                    <button type="button" onclick="filterCompetence('ALL')" id="filter-ALL" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer">
+                        Toutes (C1.1 à C1.4)
+                    </button>
+                    <button type="button" onclick="filterCompetence('C1.1')" id="filter-C1.1" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-slate-700 hover:bg-red-100 border border-red-200 transition cursor-pointer">
+                        C1.1 — Constater
+                    </button>
+                    <button type="button" onclick="filterCompetence('C1.2')" id="filter-C1.2" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-slate-700 hover:bg-red-100 border border-red-200 transition cursor-pointer">
+                        C1.2 — Hypothèses
+                    </button>
+                    <button type="button" onclick="filterCompetence('C1.3')" id="filter-C1.3" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-slate-700 hover:bg-red-100 border border-red-200 transition cursor-pointer">
+                        C1.3 — Essais &amp; mesures
+                    </button>
+                    <button type="button" onclick="filterCompetence('C1.4')" id="filter-C1.4" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-slate-700 hover:bg-red-100 border border-red-200 transition cursor-pointer">
+                        C1.4 — Solutions correctives
+                    </button>
+                </div>
+                <div class="text-xs text-slate-600 font-medium">
+                    Bloc 1 : <span class="font-bold text-blue-900">Diagnostic des systèmes</span>
+                </div>
+            </section>
+
+            <!-- Conteneur des Critères d'Évaluation C1.1 à C1.4 (Généré dynamiquement par JS) -->
+            <div id="criteria-container" class="space-y-6"></div>
+
+            <!-- Synthèse par Compétence & Observations du Jury -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Tableau récapitulatif par Compétence -->
+                <div class="lg:col-span-7 bg-white/95 rounded-2xl shadow-sm border border-red-200 p-5 card-critere flex flex-col justify-between">
+                    <div>
+                        <!-- Rappel explicite du nom de l'étudiant juste au-dessus des taux de réussite au niveau taxonomique -->
+                        <div class="mb-3 px-3.5 py-2.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-2 flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0" id="bottom-student-index">#1</span>
+                                <div>
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Candidat évalué</div>
+                                    <div id="bottom-student-name-display" class="text-sm sm:text-base font-extrabold text-slate-900">Étudiant 1</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Note globale</span>
+                                <span id="bottom-student-grade-display" class="text-sm font-black text-blue-700">15.00 / 20</span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-base font-extrabold text-slate-900 mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            Synthèse par Compétence — Bloc 1 / Épreuve E5 (U5)
+                        </h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b border-red-200 text-xs uppercase text-slate-500">
+                                        <th class="py-2.5 px-3 font-bold">Compétence</th>
+                                        <th class="py-2.5 px-3 font-bold text-right">Points pondérés</th>
+                                        <th class="py-2.5 px-3 font-bold text-right">Niveau taxonomique atteint (1 à 4)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="competency-summary-body" class="divide-y divide-red-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Légende de correspondance des niveaux taxonomiques -->
+                    <div class="mt-4 pt-3 border-t border-red-100">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Correspondance des niveaux taxonomiques (sur équivalent /20) :</div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
+                            <div class="px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-800 font-semibold text-center">
+                                <strong>Niveau 1 :</strong> 0 à 7
+                            </div>
+                            <div class="px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 font-semibold text-center">
+                                <strong>Niveau 2 :</strong> 8 à 11
+                            </div>
+                            <div class="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-center">
+                                <strong>Niveau 3 :</strong> 12 à 16
+                            </div>
+                            <div class="px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 font-semibold text-center">
+                                <strong>Niveau 4 :</strong> 16 à 20
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observations de l'examinateur -->
+                <div class="lg:col-span-5 bg-white/95 rounded-2xl shadow-sm border border-red-200 p-5 flex flex-col card-critere">
+                    <h2 class="text-base font-extrabold text-slate-900 mb-2 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Observations &amp; Appréciation du Jury / Équipe pédagogique
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-3">Rigueur de la démarche scientifique et méthodologique de diagnostic, pertinence des mesures physiques/électriques, sécurité SSE, chiffrage et devoir de conseil.</p>
+                    <textarea id="examiner-comments" rows="6" oninput="saveState()" placeholder="Saisir ici les remarques détaillées sur la démarche de diagnostic et la prestation du candidat..." class="w-full flex-grow p-3.5 rounded-xl border border-red-200 bg-red-50/30 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-y"></textarea>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Pied de page discret -->
+    <footer class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-xs text-slate-600 no-print">
+        Outil d'évaluation pédagogique autonome — BTS Maintenance des Véhicules (Arrêté du 10/12/2025 • Épreuve E5 : Réalisation du diagnostic des systèmes des véhicules — C1.1, C1.2, C1.3 &amp; C1.4)
+    </footer>
+
+    <!-- Modale d'édition rapide des 30 noms d'étudiants -->
+    <div id="bulk-names-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-bold text-slate-900">Modifier la liste des 30 étudiants</h3>
+                <button type="button" onclick="closeBulkNamesModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-600 mb-3">
+                Saisissez ou collez jusqu'à <strong>30 noms d'étudiants</strong> (un par ligne, par exemple depuis Excel ou Pronote). Les notes déjà saisies sur chaque onglet sont conservées.
+            </p>
+            <textarea id="bulk-names-textarea" rows="12" class="w-full p-3 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
+            <div class="flex justify-end gap-3 mt-4">
+                <button type="button" onclick="closeBulkNamesModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                    Annuler
+                </button>
+                <button type="button" onclick="applyBulkNames()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition cursor-pointer">
+                    Enregistrer la liste
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation pour Réinitialiser -->
+    <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+            <div class="flex items-center gap-3 text-red-600 mb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Réinitialiser la grille ?</h3>
+            </div>
+            <p class="text-sm text-slate-600 mb-5">
+                Toutes les notes saisies, les cases « Non évalué » et les commentaires de l'étudiant sélectionné seront effacés (son nom est conservé).
+            </p>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                    Annuler
+                </button>
+                <button type="button" onclick="confirmResetCurrentStudent()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition cursor-pointer">
+                    Réinitialiser cet étudiant
+                </button>
+                <button type="button" onclick="confirmReset()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white shadow-sm transition cursor-pointer">
+                    Tout (30 étudiants)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast discrète -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 pointer-events-none translate-y-20 opacity-0">
+        <span id="toast-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="toast-message">Action effectuée</span>
+    </div>
+
+    <script>
+        // =========================================================================
+        // RÉFÉRENTIEL DÉTAILLÉ DES COMPÉTENCES C1.1, C1.2, C1.3 & C1.4 (BLOC 1 — ÉPREUVE E5 / U5)
+        // Structure : 15 blocs de critères (coefficient par bloc) • 49 lignes d'éléments observés (0.0 à 4.0)
+        // =========================================================================
+        const RUBRIC_DATA = [
+            {
+                        "id": "critere_1",
+                        "title": "Les règles d’hygiène et de sécurité sont respectées",
+                        "competence": "C1.1",
+                        "competenceLabel": "C1.1 Constater le dysfonctionnement",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "1.1",
+                                                "text": "L’organisation du poste de travail, les moyens de prévention et le choix des équipements de protection collective et individuelle sont définis et adaptés à l’intervention"
+                                    },
+                                    {
+                                                "id": "1.2",
+                                                "text": "Les risques liés à l’intervention sont qualifiés et traités"
+                                    },
+                                    {
+                                                "id": "1.3",
+                                                "text": "Les consignes d’hygiène et de sécurité sont appliquées"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_2",
+                        "title": "L’intégrité du véhicule est garantie",
+                        "competence": "C1.1",
+                        "competenceLabel": "C1.1 Constater le dysfonctionnement",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "2.1",
+                                                "text": "Les éléments de protection du véhicule sont adaptés et correctement utilisés"
+                                    },
+                                    {
+                                                "id": "2.2",
+                                                "text": "Aucune détérioration n’est constatée"
+                                    },
+                                    {
+                                                "id": "2.3",
+                                                "text": "La propreté du véhicule est préservée"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_3",
+                        "title": "Les informations nécessaires au pré-diagnostic sont analysées",
+                        "competence": "C1.1",
+                        "competenceLabel": "C1.1 Constater le dysfonctionnement",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "3.1",
+                                                "text": "L’ordre de réparation est complété sur la base de l’intervention"
+                                    },
+                                    {
+                                                "id": "3.2",
+                                                "text": "Le véhicule est identifié (VIN, plaque d’immatriculation)"
+                                    },
+                                    {
+                                                "id": "3.3",
+                                                "text": "Les informations collectées (historique, documentation, plan de maintenance, recueil des symptômes auprès du client, codes défauts etc.) sont cohérentes avec le dysfonctionnement"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_4",
+                        "title": "La panne ou les dysfonctionnements sont constatés",
+                        "competence": "C1.1",
+                        "competenceLabel": "C1.1 Constater le dysfonctionnement",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "4.1",
+                                                "text": "L’outillage est conforme et adapté à l’intervention"
+                                    },
+                                    {
+                                                "id": "4.2",
+                                                "text": "Les tests préliminaires réalisés, dont ceux préconisés, recréent le contexte d’apparition de la panne"
+                                    },
+                                    {
+                                                "id": "4.3",
+                                                "text": "Les différentes conditions et les paramètres qui peuvent influencer l’apparition des symptômes sont identifiés"
+                                    },
+                                    {
+                                                "id": "4.4",
+                                                "text": "Le dysfonctionnement et/ou l’anomalie sont confirmés"
+                                    },
+                                    {
+                                                "id": "4.5",
+                                                "text": "Le dysfonctionnement est explicité en utilisant un langage professionnel adapté"
+                                    },
+                                    {
+                                                "id": "4.6",
+                                                "text": "L’anomalie détectée est retranscrite"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_5",
+                        "title": "Les règles d’hygiène et de sécurité sont respectées",
+                        "competence": "C1.2",
+                        "competenceLabel": "C1.2 Hiérarchiser les hypothèses",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "5.1",
+                                                "text": "L’organisation du poste de travail, les moyens de prévention et le choix des équipements de protection collective et individuelle sont définis et adaptés à l’intervention"
+                                    },
+                                    {
+                                                "id": "5.2",
+                                                "text": "Les risques liés à l’intervention sont qualifiés et traités"
+                                    },
+                                    {
+                                                "id": "5.3",
+                                                "text": "Les consignes d’hygiène et de sécurité sont appliquées"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_6",
+                        "title": "Les informations nécessaires au diagnostic sont analysées",
+                        "competence": "C1.2",
+                        "competenceLabel": "C1.2 Hiérarchiser les hypothèses",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "6.1",
+                                                "text": "Les informations collectées (historique, documentation, plan de maintenance, recueil des symptômes auprès du client, système embarqué de diagnostic prédictif etc.) sont cohérentes avec le dysfonctionnement"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_7",
+                        "title": "Les hypothèses sont émises selon le dysfonctionnement constaté",
+                        "competence": "C1.2",
+                        "competenceLabel": "C1.2 Hiérarchiser les hypothèses",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "7.1",
+                                                "text": "Les propositions sont pertinentes"
+                                    },
+                                    {
+                                                "id": "7.2",
+                                                "text": "Les hypothèses sont hiérarchisées selon une logique liée à la probabilité, l’accessibilité, la disponibilité et la rentabilité"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_8",
+                        "title": "Les règles d’hygiène et de sécurité sont respectées",
+                        "competence": "C1.3",
+                        "competenceLabel": "C1.3 Appliquer un protocole d'essais et mesures",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "8.1",
+                                                "text": "L’organisation du poste de travail, les moyens de prévention et le choix des équipements de protection collective et individuelle sont définis et adaptés à l’intervention"
+                                    },
+                                    {
+                                                "id": "8.2",
+                                                "text": "Les risques liés à l’intervention sont qualifiés et traités"
+                                    },
+                                    {
+                                                "id": "8.3",
+                                                "text": "Les consignes d’hygiène et de sécurité sont appliquées"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_9",
+                        "title": "L’intégrité du véhicule est garantie",
+                        "competence": "C1.3",
+                        "competenceLabel": "C1.3 Appliquer un protocole d'essais et mesures",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "9.1",
+                                                "text": "Les éléments de protection du véhicule sont adaptés et correctement utilisés"
+                                    },
+                                    {
+                                                "id": "9.2",
+                                                "text": "Aucune détérioration n’est constatée"
+                                    },
+                                    {
+                                                "id": "9.3",
+                                                "text": "La propreté du véhicule est préservée"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_10",
+                        "title": "Le protocole d’essais et mesures est appliqué",
+                        "competence": "C1.3",
+                        "competenceLabel": "C1.3 Appliquer un protocole d'essais et mesures",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "10.1",
+                                                "text": "La liste des contrôles et des mesures est pertinente compte tenu des hypothèses"
+                                    },
+                                    {
+                                                "id": "10.2",
+                                                "text": "L’utilisation des outils de mesure et de contrôle permet d’obtenir des valeurs exploitables"
+                                    },
+                                    {
+                                                "id": "10.3",
+                                                "text": "Les résultats, les relevés obtenus ou les observations sont analysés et interprétés selon les valeurs de référence constructeur"
+                                    },
+                                    {
+                                                "id": "10.4",
+                                                "text": "En cas d’absence de valeurs constructeur, l’analyse et l’interprétation se font à partir de valeurs définies par le technicien supérieur"
+                                    },
+                                    {
+                                                "id": "10.5",
+                                                "text": "L’interprétation des données recueillies permet d’identifier l’origine de la défaillance"
+                                    },
+                                    {
+                                                "id": "10.6",
+                                                "text": "Un test alternatif permet de confirmer la panne"
+                                    },
+                                    {
+                                                "id": "10.7",
+                                                "text": "Les éléments défaillants, la cause de la panne sont identifiés et retranscrits suivant la procédure prescrite"
+                                    },
+                                    {
+                                                "id": "10.8",
+                                                "text": "L’ordre de réparation est complété"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_11",
+                        "title": "La proposition est pertinente techniquement",
+                        "competence": "C1.4",
+                        "competenceLabel": "C1.4 Proposer des solutions correctives adaptées aux contraintes économiques, environnementales et réglementaires",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "11.1",
+                                                "text": "Les opérations de remise en conformité sont identifiées et cohérentes avec l’origine de la panne"
+                                    },
+                                    {
+                                                "id": "11.2",
+                                                "text": "Les conséquences sur les autres éléments sont prises en compte"
+                                    },
+                                    {
+                                                "id": "11.3",
+                                                "text": "Les alternatives sont hiérarchisées selon leur pertinence"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_12",
+                        "title": "La maîtrise économique est assurée",
+                        "competence": "C1.4",
+                        "competenceLabel": "C1.4 Proposer des solutions correctives adaptées aux contraintes économiques, environnementales et réglementaires",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "12.1",
+                                                "text": "Le chiffrage est précis et détaillé"
+                                    },
+                                    {
+                                                "id": "12.2",
+                                                "text": "Les coûts sont optimisés"
+                                    },
+                                    {
+                                                "id": "12.3",
+                                                "text": "Les délais sont réalistes"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_13",
+                        "title": "L’exigence environnementale est intégrée",
+                        "competence": "C1.4",
+                        "competenceLabel": "C1.4 Proposer des solutions correctives adaptées aux contraintes économiques, environnementales et réglementaires",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "13.1",
+                                                "text": "La gestion des déchets est anticipée"
+                                    },
+                                    {
+                                                "id": "13.2",
+                                                "text": "Les normes environnementales sont respectées"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_14",
+                        "title": "La conformité est assurée",
+                        "competence": "C1.4",
+                        "competenceLabel": "C1.4 Proposer des solutions correctives adaptées aux contraintes économiques, environnementales et réglementaires",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "14.1",
+                                                "text": "Les solutions respectent la réglementation"
+                                    },
+                                    {
+                                                "id": "14.2",
+                                                "text": "La sécurité est garantie"
+                                    },
+                                    {
+                                                "id": "14.3",
+                                                "text": "La traçabilité est assurée"
+                                    },
+                                    {
+                                                "id": "14.4",
+                                                "text": "Les garanties de la solution proposée sont identifiées"
+                                    }
+                        ]
+            },
+            {
+                        "id": "critere_15",
+                        "title": "Le devoir de conseil est assuré",
+                        "competence": "C1.4",
+                        "competenceLabel": "C1.4 Proposer des solutions correctives adaptées aux contraintes économiques, environnementales et réglementaires",
+                        "defaultCoeff": 1.0,
+                        "indicators": [
+                                    {
+                                                "id": "15.1",
+                                                "text": "Les solutions, y compris celles de réemploi, sont clairement expliquées au client"
+                                    },
+                                    {
+                                                "id": "15.2",
+                                                "text": "Les choix sont justifiés techniquement et économiquement"
+                                    }
+                        ]
+            }
+];
+
+        const STUDENT_COUNT = 30;
+        const STORAGE_KEY = "BTS_MV_E5_30_STUDENTS_U5_0_4_V4";
+
+        // Détermination dynamique du niveau et du style selon une note continue (0.0 à 4.0)
+        function getLevelInfo(score) {
+            const val = Number(score);
+            if (val <= 1.6) {
+                return { label: "Insuffisant", badgeClass: "bg-red-100 text-red-800 border-red-300", sliderClass: "level-1" };
+            } else if (val <= 2.4) {
+                return { label: "Fragile", badgeClass: "bg-amber-100 text-amber-800 border-amber-300", sliderClass: "level-2" };
+            } else if (val <= 3.4) {
+                return { label: "Satisfaisant", badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300", sliderClass: "level-3" };
+            } else {
+                return { label: "Expert", badgeClass: "bg-blue-100 text-blue-800 border-blue-300", sliderClass: "level-4" };
+            }
+        }
+
+        // Détermination du niveau taxonomique (1 à 4) à partir de la note équivalente sur 20
+        function getTaxonomicLevelInfo(grade20) {
+            if (grade20 < 8) {
+                return {
+                    level: 1,
+                    label: "Niveau 1",
+                    sublabel: "Information",
+                    badgeClass: "bg-red-100 text-red-800 border-red-300"
+                };
+            } else if (grade20 < 12) {
+                return {
+                    level: 2,
+                    label: "Niveau 2",
+                    sublabel: "Expression",
+                    badgeClass: "bg-amber-100 text-amber-800 border-amber-300"
+                };
+            } else if (grade20 <= 16) {
+                return {
+                    level: 3,
+                    label: "Niveau 3",
+                    sublabel: "Maîtrise d'outils",
+                    badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300"
+                };
+            } else {
+                return {
+                    level: 4,
+                    label: "Niveau 4",
+                    sublabel: "Maîtrise méthodologique",
+                    badgeClass: "bg-blue-100 text-blue-800 border-blue-300"
+                };
+            }
+        }
+
+        const COEFF_OPTIONS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+        let activeFilter = "ALL";
+
+        let studentsList = [];
+        let activeStudentIndex = 0;
+
+        // Crée un objet d'évaluation vierge pour l'étudiant numéro `idx + 1`
+        function createDefaultStudentState(idx) {
+            const state = {
+                projectTitle: "",
+                studentName: `Étudiant ${idx + 1}`,
+                evalDate: new Date().toISOString().split('T')[0],
+                examinerName: "",
+                btsOption: "VL",
+                comments: "",
+                scores: {},
+                critCoeffs: {},
+                notEvaluated: {}
+            };
+
+            RUBRIC_DATA.forEach(crit => {
+                state.critCoeffs[crit.id] = crit.defaultCoeff;
+                crit.indicators.forEach(ind => {
+                    state.scores[ind.id] = 3.0;
+                    state.notEvaluated[ind.id] = false;
+                });
+            });
+
+            return state;
+        }
+
+        function getCurrentState() {
+            return studentsList[activeStudentIndex];
+        }
+
+        // Helper pour récupérer le coefficient d'un bloc critère (rétrocompatible)
+        function getCritCoeff(st, crit) {
+            if (st.critCoeffs && st.critCoeffs[crit.id] !== undefined) {
+                return Number(st.critCoeffs[crit.id]);
+            }
+            if (st.coeffs && crit.indicators[0] && st.coeffs[crit.indicators[0].id] !== undefined) {
+                return Number(st.coeffs[crit.indicators[0].id]);
+            }
+            return Number(crit.defaultCoeff || 1.0);
+        }
+
+        // Calcule la note sur 20 d'un étudiant donné
+        function computeStudentGrade20(st) {
+            let totalEarned = 0;
+            let totalMax = 0;
+            RUBRIC_DATA.forEach(crit => {
+                const coeff = getCritCoeff(st, crit);
+                crit.indicators.forEach(ind => {
+                    if (st.notEvaluated && st.notEvaluated[ind.id]) return;
+                    const score = Number(st.scores[ind.id] ?? 3.0);
+                    totalEarned += score * coeff;
+                    totalMax += 4 * coeff;
+                });
+            });
+            if (totalMax === 0) return null;
+            return (totalEarned / totalMax) * 20;
+        }
+
+        function initAllStudents() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed.studentsList) && parsed.studentsList.length === STUDENT_COUNT) {
+                        studentsList = parsed.studentsList;
+                        activeStudentIndex = Math.min(STUDENT_COUNT - 1, Math.max(0, parsed.activeStudentIndex || 0));
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn("Impossible de relire la sauvegarde locale :", e);
+            }
+
+            studentsList = [];
+            for (let i = 0; i < STUDENT_COUNT; i++) {
+                studentsList.push(createDefaultStudentState(i));
+            }
+            activeStudentIndex = 0;
+        }
+
+        function persistToLocalStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    activeStudentIndex,
+                    studentsList
+                }));
+            } catch (e) {
+                // Ignorer si quota dépassé
+            }
+        }
+
+        function renderStudentTabs() {
+            const container = document.getElementById("student-tabs-list");
+            container.innerHTML = "";
+
+            studentsList.forEach((st, idx) => {
+                const isActive = idx === activeStudentIndex;
+                const grade = computeStudentGrade20(st);
+                const gradeText = grade === null ? "N/E" : `${grade.toFixed(1)}`;
+
+                const row = document.createElement("div");
+                row.className = `group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition cursor-pointer ${
+                    isActive
+                        ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                        : "bg-red-50/50 hover:bg-red-100/80 text-slate-800 border-red-200/80"
+                }`;
+                row.onclick = () => selectStudentTab(idx);
+
+                const numBadge = document.createElement("span");
+                numBadge.className = `w-6 h-6 rounded-lg text-[11px] font-extrabold flex items-center justify-center shrink-0 ${
+                    isActive ? "bg-blue-800 text-white" : "bg-white text-slate-600 border border-red-200"
+                }`;
+                numBadge.textContent = idx + 1;
+
+                const nameInput = document.createElement("input");
+                nameInput.type = "text";
+                nameInput.value = st.studentName;
+                nameInput.placeholder = `Étudiant ${idx + 1}`;
+                nameInput.setAttribute("aria-label", `Nom de l'étudiant ${idx + 1}`);
+                nameInput.className = `w-full min-w-0 bg-transparent text-xs font-semibold outline-none truncate rounded px-1 py-0.5 ${
+                    isActive
+                        ? "text-white placeholder-blue-200 focus:bg-blue-700/80"
+                        : "text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-1 focus:ring-blue-400"
+                }`;
+
+                nameInput.onfocus = () => {
+                    if (activeStudentIndex !== idx) {
+                        selectStudentTab(idx, true);
+                    }
+                };
+                nameInput.onclick = (e) => {
+                    e.stopPropagation();
+                    if (activeStudentIndex !== idx) {
+                        selectStudentTab(idx, true);
+                    }
+                };
+                nameInput.oninput = (e) => {
+                    studentsList[idx].studentName = e.target.value;
+                    if (idx === activeStudentIndex) {
+                        document.getElementById("student-name").value = e.target.value;
+                        updateStudentNameDisplays();
+                    }
+                    persistToLocalStorage();
+                };
+
+                const gradeBadge = document.createElement("span");
+                gradeBadge.id = `tab-grade-${idx}`;
+                gradeBadge.className = `text-[11px] font-extrabold px-1.5 py-0.5 rounded-md shrink-0 ${
+                    isActive
+                        ? "bg-white text-blue-700"
+                        : "bg-white text-slate-600 border border-red-200"
+                }`;
+                gradeBadge.textContent = gradeText;
+
+                row.appendChild(numBadge);
+                row.appendChild(nameInput);
+                row.appendChild(gradeBadge);
+                container.appendChild(row);
+            });
+
+            document.getElementById("sidebar-active-counter").textContent = `${activeStudentIndex + 1} / ${STUDENT_COUNT}`;
+        }
+
+        function selectStudentTab(idx, keepInputFocus = false) {
+            if (idx < 0 || idx >= STUDENT_COUNT) return;
+            saveState();
+            activeStudentIndex = idx;
+            syncFormFromState();
+            renderStudentTabs();
+            renderCriteria();
+            recalculateAll();
+            persistToLocalStorage();
+
+            if (keepInputFocus) {
+                const inputs = document.querySelectorAll("#student-tabs-list input[type='text']");
+                if (inputs[idx]) inputs[idx].focus();
+            }
+        }
+
+        function onTopStudentNameInput(val) {
+            const st = getCurrentState();
+            st.studentName = val;
+            const tabInputs = document.querySelectorAll("#student-tabs-list input[type='text']");
+            if (tabInputs[activeStudentIndex]) {
+                tabInputs[activeStudentIndex].value = val;
+            }
+            updateStudentNameDisplays();
+            persistToLocalStorage();
+        }
+
+        function updateStudentNameDisplays() {
+            const st = getCurrentState();
+            const displayName = (st.studentName && st.studentName.trim()) ? st.studentName.trim() : `Étudiant ${activeStudentIndex + 1}`;
+            document.getElementById("header-active-student-pill").textContent = `#${activeStudentIndex + 1} — ${displayName}`;
+            document.getElementById("bottom-student-index").textContent = `#${activeStudentIndex + 1}`;
+            document.getElementById("bottom-student-name-display").textContent = displayName;
+        }
+
+        function syncFormFromState() {
+            const st = getCurrentState();
+            document.getElementById("project-title").value = st.projectTitle || "";
+            document.getElementById("student-name").value = st.studentName || "";
+            document.getElementById("eval-date").value = st.evalDate || new Date().toISOString().split('T')[0];
+            document.getElementById("examiner-name").value = st.examinerName || "";
+            document.getElementById("examiner-comments").value = st.comments || "";
+
+            const radios = document.querySelectorAll('input[name="bts-option"]');
+            radios.forEach(r => {
+                r.checked = (r.value === (st.btsOption || "VL"));
+            });
+
+            updateProjectTitle();
+            updateStudentNameDisplays();
+        }
+
+        function updateOption(val) {
+            getCurrentState().btsOption = val;
+            persistToLocalStorage();
+        }
+
+        function updateProjectTitle() {
+            const val = document.getElementById("project-title").value.trim();
+            const headerTitle = document.getElementById("header-project-title");
+            headerTitle.textContent = val ? `Diagnostic : ${val}` : "Réalisation du Diagnostic des Systèmes des Véhicules";
+        }
+
+        function saveState() {
+            const st = getCurrentState();
+            if (!st) return;
+            st.projectTitle = document.getElementById("project-title").value;
+            st.studentName = document.getElementById("student-name").value;
+            st.evalDate = document.getElementById("eval-date").value;
+            st.examinerName = document.getElementById("examiner-name").value;
+            st.comments = document.getElementById("examiner-comments").value;
+            updateStudentNameDisplays();
+            persistToLocalStorage();
+        }
+
+        function filterCompetence(comp) {
+            activeFilter = comp;
+            document.querySelectorAll(".filter-btn").forEach(btn => {
+                btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-slate-700 hover:bg-red-100 border border-red-200 transition cursor-pointer";
+            });
+            const activeBtn = document.getElementById(`filter-${comp}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer";
+            }
+            renderCriteria();
+            recalculateAll();
+        }
+
+        function getCompetenceBadgeStyle(comp) {
+            switch (comp) {
+                case "C1.1": return "bg-sky-100 text-sky-800 border-sky-300";
+                case "C1.2": return "bg-indigo-100 text-indigo-800 border-indigo-300";
+                case "C1.3": return "bg-blue-100 text-blue-800 border-blue-300";
+                case "C1.4": return "bg-teal-100 text-teal-800 border-teal-300";
+                default:     return "bg-slate-100 text-slate-800 border-slate-300";
+            }
+        }
+
+        // Rendu des 15 blocs de critères avec 1 coefficient par bloc et 1 ligne compacte par élément observé
+        function renderCriteria() {
+            const evalState = getCurrentState();
+            const container = document.getElementById("criteria-container");
+            container.innerHTML = "";
+
+            RUBRIC_DATA.forEach((crit) => {
+                if (activeFilter !== "ALL" && crit.competence !== activeFilter) {
+                    return;
+                }
+
+                const card = document.createElement("section");
+                card.className = "bg-white/95 rounded-2xl shadow-sm border border-red-200 overflow-hidden card-critere";
+
+                const allDisabled = crit.indicators.every(ind => Boolean(evalState.notEvaluated[ind.id]));
+                const compBadgeColor = getCompetenceBadgeStyle(crit.competence);
+                const critCoeff = getCritCoeff(evalState, crit);
+
+                const coeffOptionsHTML = COEFF_OPTIONS.map(c =>
+                    `<option value="${c}" ${critCoeff === c ? "selected" : ""}>×${c.toFixed(1)}</option>`
+                ).join("");
+
+                const headerHTML = `
+                    <div class="bg-red-50 px-4 sm:px-5 py-3 border-b border-red-200 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 rounded-md text-xs font-bold border shrink-0 ${compBadgeColor}">
+                                    ${crit.competence}
+                                </span>
+                                <h2 class="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">${crit.title}</h2>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-wrap shrink-0">
+                            <!-- Coefficient unique pour tout le bloc critère -->
+                            <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-red-200 shadow-2xs" title="Coefficient appliqué à tous les éléments observés de ce critère">
+                                <span class="text-[11px] font-bold uppercase text-slate-500">Coeff. bloc :</span>
+                                <button type="button" ${allDisabled ? "disabled" : ""} onclick="stepCritCoeff('${crit.id}', -0.5)" class="w-5 h-5 flex items-center justify-center rounded text-xs font-extrabold text-slate-600 hover:bg-red-100 disabled:opacity-40 no-print cursor-pointer">−</button>
+                                <select id="crit-coeff-${crit.id}" ${allDisabled ? "disabled" : ""} onchange="updateCritCoeff('${crit.id}', this.value)" class="text-xs font-extrabold text-blue-900 bg-transparent outline-none cursor-pointer disabled:text-slate-400">
+                                    ${coeffOptionsHTML}
+                                </select>
+                                <button type="button" ${allDisabled ? "disabled" : ""} onclick="stepCritCoeff('${crit.id}', 0.5)" class="w-5 h-5 flex items-center justify-center rounded text-xs font-extrabold text-slate-600 hover:bg-red-100 disabled:opacity-40 no-print cursor-pointer">+</button>
+                            </div>
+
+                            <!-- Bouton Critère non évalué -->
+                            <button type="button" onclick="toggleCriterionNotEvaluated('${crit.id}')" class="no-print inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${allDisabled ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200' : 'bg-white text-slate-600 border-red-200 hover:bg-red-100'}" title="Basculer tous les éléments observés de ce critère en Non évalué">
+                                <input type="checkbox" ${allDisabled ? 'checked' : ''} tabindex="-1" class="pointer-events-none rounded border-slate-300 text-slate-700">
+                                <span>Critère non évalué</span>
+                            </button>
+
+                            <!-- Sous-total pondéré du bloc -->
+                            <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-red-200 text-xs font-bold text-slate-700">
+                                <span class="text-slate-500">Sous-total :</span>
+                                <span id="subtotal-${crit.id}" class="text-blue-700">0.0 / 0.0 pts</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                let indicatorsHTML = `<div class="divide-y divide-red-100">`;
+                crit.indicators.forEach((ind) => {
+                    const isNotEval = Boolean(evalState.notEvaluated[ind.id]);
+                    const score = Number(evalState.scores[ind.id] ?? 3.0);
+                    const lvl = getLevelInfo(score);
+
+                    const badgeClass = isNotEval
+                        ? "bg-slate-200 text-slate-600 border-slate-300"
+                        : lvl.badgeClass;
+                    const badgeText = isNotEval
+                        ? "N/E"
+                        : `${score.toFixed(1)} — ${lvl.label}`;
+
+                    indicatorsHTML += `
+                        <div id="row-container-${ind.id}" class="px-4 sm:px-5 py-2.5 transition indicator-row ${isNotEval ? 'bg-slate-100/80' : 'hover:bg-red-50/40'}">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                                <!-- Colonne Gauche (7 cols) : ID + Texte de l'élément observé -->
+                                <div class="lg:col-span-7 flex items-start gap-2.5">
+                                    <span class="text-[11px] font-extrabold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shrink-0 mt-0.5">#${ind.id}</span>
+                                    <p id="text-${ind.id}" class="text-xs sm:text-sm font-medium leading-snug transition ${isNotEval ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-800'}">
+                                        ${ind.text}
+                                    </p>
+                                </div>
+
+                                <!-- Colonne Droite (5 cols) : Curseur compact + Badge niveau + Points + N/E -->
+                                <div id="controls-${ind.id}" class="lg:col-span-5 flex items-center gap-2.5 sm:gap-3">
+                                    <!-- Curseur 0.0 à 4.0 -->
+                                    <div class="flex-grow min-w-[130px]">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span id="badge-${ind.id}" class="text-[11px] font-bold px-2 py-0.2 rounded border ${badgeClass}">
+                                                ${badgeText}
+                                            </span>
+                                            <span class="text-[10px] font-semibold text-slate-400">0 — 4</span>
+                                        </div>
+                                        <input 
+                                            type="range" 
+                                            id="slider-${ind.id}" 
+                                            min="0" 
+                                            max="4" 
+                                            step="0.2" 
+                                            value="${score.toFixed(1)}" 
+                                            ${isNotEval ? "disabled" : ""}
+                                            oninput="updateScore('${ind.id}', this.value)"
+                                            class="score-slider ${lvl.sliderClass}"
+                                            aria-label="Note de 0.0 à 4.0 pour l'élément observé ${ind.id}"
+                                        >
+                                    </div>
+
+                                    <!-- Points pondérés (avec coeff du bloc) -->
+                                    <div id="row-score-${ind.id}" class="text-xs font-black text-slate-900 bg-red-50/70 px-2 py-1.5 rounded-lg border border-red-200 text-right shrink-0 min-w-[74px]">
+                                        ${isNotEval ? '<span class="text-[11px] font-bold text-slate-400">N/E</span>' : `${(score * critCoeff).toFixed(2)} <span class="text-[10px] font-normal text-slate-400">/ ${(4 * critCoeff).toFixed(1)}</span>`}
+                                    </div>
+
+                                    <!-- Case Non évalué compacte -->
+                                    <label for="ne-${ind.id}" title="Marquer cet élément observé comme Non évalué" class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-bold cursor-pointer select-none transition shrink-0 ${isNotEval ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-600 border-red-200 hover:bg-red-50'}">
+                                        <input 
+                                            type="checkbox" 
+                                            id="ne-${ind.id}" 
+                                            ${isNotEval ? "checked" : ""} 
+                                            onchange="toggleNotEvaluated('${ind.id}', this.checked)"
+                                            class="w-3.5 h-3.5 rounded accent-slate-800 cursor-pointer"
+                                        >
+                                        <span>N/E</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                indicatorsHTML += `</div>`;
+
+                card.innerHTML = headerHTML + indicatorsHTML;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleNotEvaluated(indId, isChecked) {
+            const evalState = getCurrentState();
+            evalState.notEvaluated[indId] = Boolean(isChecked);
+            renderCriteria();
+            recalculateAll();
+            persistToLocalStorage();
+        }
+
+        function toggleCriterionNotEvaluated(critId) {
+            const evalState = getCurrentState();
+            const crit = RUBRIC_DATA.find(c => c.id === critId);
+            if (!crit) return;
+
+            const allCurrentlyDisabled = crit.indicators.every(ind => Boolean(evalState.notEvaluated[ind.id]));
+            const targetState = !allCurrentlyDisabled;
+
+            crit.indicators.forEach(ind => {
+                evalState.notEvaluated[ind.id] = targetState;
+            });
+
+            renderCriteria();
+            recalculateAll();
+            persistToLocalStorage();
+        }
+
+        function updateScore(indId, val) {
+            const evalState = getCurrentState();
+            if (evalState.notEvaluated[indId]) return;
+
+            const numVal = Math.round(parseFloat(val) * 10) / 10;
+            evalState.scores[indId] = numVal;
+
+            const slider = document.getElementById(`slider-${indId}`);
+            const badge = document.getElementById(`badge-${indId}`);
+            const lvl = getLevelInfo(numVal);
+
+            slider.className = `score-slider ${lvl.sliderClass}`;
+            badge.className = `text-[11px] font-bold px-2 py-0.2 rounded border ${lvl.badgeClass}`;
+            badge.textContent = `${numVal.toFixed(1)} — ${lvl.label}`;
+
+            recalculateAll();
+            persistToLocalStorage();
+        }
+
+        function updateCritCoeff(critId, val) {
+            const evalState = getCurrentState();
+            if (!evalState.critCoeffs) evalState.critCoeffs = {};
+            evalState.critCoeffs[critId] = parseFloat(val);
+            recalculateAll();
+            persistToLocalStorage();
+        }
+
+        function stepCritCoeff(critId, delta) {
+            const evalState = getCurrentState();
+            const crit = RUBRIC_DATA.find(c => c.id === critId);
+            if (!crit) return;
+            const current = getCritCoeff(evalState, crit);
+            const next = Math.min(3.0, Math.max(0.5, current + delta));
+            if (!evalState.critCoeffs) evalState.critCoeffs = {};
+            evalState.critCoeffs[critId] = next;
+            const sel = document.getElementById(`crit-coeff-${critId}`);
+            if (sel) sel.value = next;
+            recalculateAll();
+            persistToLocalStorage();
+        }
+
+        // Recalcul global pour l'étudiant actif
+        function recalculateAll() {
+            const evalState = getCurrentState();
+            let totalEarned = 0;
+            let totalMax = 0;
+            let totalIndicators = 0;
+            let evaluatedIndicators = 0;
+
+            const compStats = {
+                "C1.1": { label: "C1.1 — Constater le dysfonctionnement (A1.1)", earned: 0, max: 0, evaluatedCount: 0 },
+                "C1.2": { label: "C1.2 — Hiérarchiser les hypothèses (A1.2)", earned: 0, max: 0, evaluatedCount: 0 },
+                "C1.3": { label: "C1.3 — Appliquer un protocole d'essais et mesures (A1.2)", earned: 0, max: 0, evaluatedCount: 0 },
+                "C1.4": { label: "C1.4 — Proposer des solutions correctives adaptées (A1.3)", earned: 0, max: 0, evaluatedCount: 0 }
+            };
+
+            RUBRIC_DATA.forEach(crit => {
+                let critEarned = 0;
+                let critMax = 0;
+                let critEvaluatedCount = 0;
+                const coeff = getCritCoeff(evalState, crit);
+
+                crit.indicators.forEach(ind => {
+                    totalIndicators++;
+                    const isNotEval = Boolean(evalState.notEvaluated[ind.id]);
+                    const rowScoreEl = document.getElementById(`row-score-${ind.id}`);
+
+                    if (isNotEval) {
+                        if (rowScoreEl) {
+                            rowScoreEl.innerHTML = `<span class="text-[11px] font-bold text-slate-400">N/E</span>`;
+                        }
+                        return;
+                    }
+
+                    evaluatedIndicators++;
+                    critEvaluatedCount++;
+                    compStats[crit.competence].evaluatedCount++;
+
+                    const score = Number(evalState.scores[ind.id] ?? 3.0);
+                    const earned = score * coeff;
+                    const max = 4 * coeff;
+
+                    critEarned += earned;
+                    critMax += max;
+
+                    if (rowScoreEl) {
+                        rowScoreEl.innerHTML = `${earned.toFixed(2)} <span class="text-[10px] font-normal text-slate-400">/ ${max.toFixed(1)}</span>`;
+                    }
+                });
+
+                totalEarned += critEarned;
+                totalMax += critMax;
+
+                const subEl = document.getElementById(`subtotal-${crit.id}`);
+                if (subEl) {
+                    if (critEvaluatedCount === 0) {
+                        subEl.textContent = "Non évalué";
+                        subEl.className = "text-slate-400 font-semibold";
+                    } else {
+                        subEl.textContent = `${critEarned.toFixed(1)} / ${critMax.toFixed(1)} pts`;
+                        subEl.className = "text-blue-700";
+                    }
+                }
+
+                compStats[crit.competence].earned += critEarned;
+                compStats[crit.competence].max += critMax;
+            });
+
+            document.getElementById("evaluated-count-display").textContent =
+                `${evaluatedIndicators} / ${totalIndicators} élément${evaluatedIndicators > 1 ? 's' : ''} observé${evaluatedIndicators > 1 ? 's' : ''} évalué${evaluatedIndicators > 1 ? 's' : ''}`;
+
+            const grade20 = totalMax > 0 ? (totalEarned / totalMax) * 20 : 0;
+            const percentage = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
+
+            const finalGradeEl = document.getElementById("final-grade");
+            const bottomGradeEl = document.getElementById("bottom-student-grade-display");
+            const tabGradeBadge = document.getElementById(`tab-grade-${activeStudentIndex}`);
+            const rawPointsEl = document.getElementById("raw-points-display");
+            const progressBar = document.getElementById("global-progress-bar");
+            const badge = document.getElementById("appreciation-badge");
+
+            if (totalMax === 0) {
+                finalGradeEl.textContent = "—";
+                bottomGradeEl.textContent = "Non évalué";
+                if (tabGradeBadge) tabGradeBadge.textContent = "N/E";
+                rawPointsEl.textContent = "(Aucun élément évalué)";
+                progressBar.style.width = "0%";
+                progressBar.className = "h-full bg-slate-400 transition-all duration-300";
+                badge.textContent = "Non évalué";
+                badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-slate-200 text-slate-700";
+            } else {
+                finalGradeEl.textContent = grade20.toFixed(2);
+                bottomGradeEl.textContent = `${grade20.toFixed(2)} / 20`;
+                if (tabGradeBadge) tabGradeBadge.textContent = grade20.toFixed(1);
+                rawPointsEl.textContent = `(${totalEarned.toFixed(1)} / ${totalMax.toFixed(1)} pts)`;
+                progressBar.style.width = `${percentage.toFixed(1)}%`;
+
+                if (grade20 < 8) {
+                    badge.textContent = "Insuffisant";
+                    badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-red-100 text-red-800";
+                    progressBar.className = "h-full bg-red-500 transition-all duration-300";
+                } else if (grade20 < 10) {
+                    badge.textContent = "Fragile";
+                    badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800";
+                    progressBar.className = "h-full bg-amber-500 transition-all duration-300";
+                } else if (grade20 < 14) {
+                    badge.textContent = "Satisfaisant";
+                    badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
+                    progressBar.className = "h-full bg-emerald-500 transition-all duration-300";
+                } else if (grade20 < 17) {
+                    badge.textContent = "Très bien";
+                    badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-800";
+                    progressBar.className = "h-full bg-blue-600 transition-all duration-300";
+                } else {
+                    badge.textContent = "Excellent / Expert";
+                    badge.className = "px-2 py-0.5 text-xs font-bold rounded-full bg-indigo-100 text-indigo-800";
+                    progressBar.className = "h-full bg-indigo-600 transition-all duration-300";
+                }
+            }
+
+            // Tableau de synthèse par compétence
+            const tbody = document.getElementById("competency-summary-body");
+            tbody.innerHTML = "";
+            Object.keys(compStats).forEach(compKey => {
+                const st = compStats[compKey];
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-red-50/50";
+
+                if (st.evaluatedCount === 0 || st.max === 0) {
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-semibold text-slate-400">${st.label}</td>
+                        <td class="py-2.5 px-3 text-right text-slate-400 italic">Non évalué</td>
+                        <td class="py-2.5 px-3 text-right">
+                            <span class="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">N/E</span>
+                        </td>
+                    `;
+                } else {
+                    const compGrade20 = (st.earned / st.max) * 20;
+                    const taxo = getTaxonomicLevelInfo(compGrade20);
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-semibold text-slate-800">${st.label}</td>
+                        <td class="py-2.5 px-3 text-right text-slate-600 font-medium">${st.earned.toFixed(1)} / ${st.max.toFixed(1)}</td>
+                        <td class="py-2.5 px-3 text-right">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold border ${taxo.badgeClass}">
+                                ${taxo.label}
+                                <span class="font-medium opacity-80">(${taxo.sublabel})</span>
+                            </span>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        // =========================================================================
+        // MODALE D'ÉDITION EN MASSE DES 30 NOMS
+        // =========================================================================
+        function openBulkNamesModal() {
+            const textarea = document.getElementById("bulk-names-textarea");
+            textarea.value = studentsList.map(s => s.studentName).join("\n");
+            document.getElementById("bulk-names-modal").classList.remove("hidden");
+        }
+
+        function closeBulkNamesModal() {
+            document.getElementById("bulk-names-modal").classList.add("hidden");
+        }
+
+        function applyBulkNames() {
+            const lines = document.getElementById("bulk-names-textarea").value.split(/\r?\n/);
+            for (let i = 0; i < STUDENT_COUNT; i++) {
+                const rawName = lines[i] !== undefined ? lines[i].trim() : "";
+                studentsList[i].studentName = rawName || `Étudiant ${i + 1}`;
+            }
+            syncFormFromState();
+            renderStudentTabs();
+            persistToLocalStorage();
+            closeBulkNamesModal();
+            showToast("Liste des 30 étudiants mise à jour");
+        }
+
+        // =========================================================================
+        // SAUVEGARDE ET IMPORTATION EN JSON (CLASSE COMPLÈTE 30 ÉTUDIANTS)
+        // =========================================================================
+        function exportEvaluationJSON() {
+            saveState();
+            const dateStr = new Date().toISOString().split('T')[0];
+
+            const payload = {
+                format: "BTS_MV_E5_C1_1_A_C1_4_CLASSE_30",
+                version: "3.0",
+                exportedAt: new Date().toISOString(),
+                activeStudentIndex: activeStudentIndex,
+                students: studentsList
+            };
+
+            const jsonString = JSON.stringify(payload, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `Evaluations_E5_C1_Classe_${dateStr}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast(`Sauvegarde classe enregistrée (30 étudiants)`);
+        }
+
+        function triggerImportJSON() {
+            const fileInput = document.getElementById("json-file-input");
+            fileInput.value = "";
+            fileInput.click();
+        }
+
+        function sanitizeStudentObject(raw, idx) {
+            const clean = createDefaultStudentState(idx);
+            if (!raw || typeof raw !== "object") return clean;
+
+            clean.projectTitle = typeof raw.projectTitle === "string" ? raw.projectTitle : "";
+            clean.studentName = typeof raw.studentName === "string" && raw.studentName.trim() ? raw.studentName : `Étudiant ${idx + 1}`;
+            clean.evalDate = typeof raw.evalDate === "string" ? raw.evalDate : clean.evalDate;
+            clean.examinerName = typeof raw.examinerName === "string" ? raw.examinerName : "";
+            clean.btsOption = typeof raw.btsOption === "string" ? raw.btsOption : "VL";
+            clean.comments = typeof raw.comments === "string" ? raw.comments : "";
+
+            RUBRIC_DATA.forEach(crit => {
+                if (raw.critCoeffs && raw.critCoeffs[crit.id] !== undefined) {
+                    const c = parseFloat(raw.critCoeffs[crit.id]);
+                    if (!isNaN(c) && COEFF_OPTIONS.includes(c)) {
+                        clean.critCoeffs[crit.id] = c;
+                    }
+                } else if (raw.coeffs && crit.indicators[0] && raw.coeffs[crit.indicators[0].id] !== undefined) {
+                    const c = parseFloat(raw.coeffs[crit.indicators[0].id]);
+                    if (!isNaN(c) && COEFF_OPTIONS.includes(c)) {
+                        clean.critCoeffs[crit.id] = c;
+                    }
+                }
+
+                crit.indicators.forEach(ind => {
+                    if (raw.scores && raw.scores[ind.id] !== undefined) {
+                        const s = parseFloat(raw.scores[ind.id]);
+                        if (!isNaN(s) && s >= 0 && s <= 4) {
+                            clean.scores[ind.id] = Math.round(s * 10) / 10;
+                        }
+                    }
+                    if (raw.notEvaluated && raw.notEvaluated[ind.id] !== undefined) {
+                        clean.notEvaluated[ind.id] = Boolean(raw.notEvaluated[ind.id]);
+                    }
+                });
+            });
+            return clean;
+        }
+
+        function importEvaluationJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+
+                    if (parsed && Array.isArray(parsed.students)) {
+                        for (let i = 0; i < STUDENT_COUNT; i++) {
+                            studentsList[i] = sanitizeStudentObject(parsed.students[i], i);
+                        }
+                        activeStudentIndex = Math.min(STUDENT_COUNT - 1, Math.max(0, parsed.activeStudentIndex || 0));
+                        syncFormFromState();
+                        renderStudentTabs();
+                        renderCriteria();
+                        recalculateAll();
+                        persistToLocalStorage();
+                        showToast("Sauvegarde classe (30 étudiants) importée avec succès");
+                        return;
+                    }
+
+                    const importedData = parsed.data ? parsed.data : parsed;
+                    if (!importedData || typeof importedData !== "object" || !importedData.scores) {
+                        throw new Error("Structure de fichier JSON non reconnue.");
+                    }
+
+                    studentsList[activeStudentIndex] = sanitizeStudentObject(importedData, activeStudentIndex);
+                    syncFormFromState();
+                    renderStudentTabs();
+                    renderCriteria();
+                    recalculateAll();
+                    persistToLocalStorage();
+
+                    const labelCandidat = studentsList[activeStudentIndex].studentName;
+                    showToast(`Évaluation importée dans l'onglet #${activeStudentIndex + 1} (${labelCandidat})`);
+                } catch (err) {
+                    console.error("Erreur lors de l'import JSON :", err);
+                    showToast("Erreur : fichier JSON invalide ou corrompu", true);
+                }
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+
+        // =========================================================================
+        // MODALE DE RÉINITIALISATION
+        // =========================================================================
+        function openResetModal() {
+            document.getElementById("reset-modal").classList.remove("hidden");
+        }
+        function closeResetModal() {
+            document.getElementById("reset-modal").classList.add("hidden");
+        }
+        function confirmResetCurrentStudent() {
+            const keptName = studentsList[activeStudentIndex].studentName;
+            studentsList[activeStudentIndex] = createDefaultStudentState(activeStudentIndex);
+            studentsList[activeStudentIndex].studentName = keptName;
+            syncFormFromState();
+            renderStudentTabs();
+            renderCriteria();
+            recalculateAll();
+            persistToLocalStorage();
+            closeResetModal();
+            showToast(`Grille de ${keptName} réinitialisée`);
+        }
+        function confirmReset() {
+            localStorage.removeItem(STORAGE_KEY);
+            studentsList = [];
+            for (let i = 0; i < STUDENT_COUNT; i++) {
+                studentsList.push(createDefaultStudentState(i));
+            }
+            activeStudentIndex = 0;
+            syncFormFromState();
+            renderStudentTabs();
+            renderCriteria();
+            recalculateAll();
+            persistToLocalStorage();
+            closeResetModal();
+            showToast("Les 30 grilles ont été réinitialisées");
+        }
+
+        // =========================================================================
+        // EXPORTS CSV COMPATIBLES EXCEL
+        // =========================================================================
+        function exportCSV() {
+            saveState();
+            const evalState = getCurrentState();
+            const project = evalState.projectTitle.trim() || "Diagnostic des Systemes E5";
+            const student = evalState.studentName.trim() || `Etudiant_${activeStudentIndex + 1}`;
+            const date = evalState.evalDate || "";
+            const examiner = evalState.examinerName.trim() || "Non renseigné";
+            const option = evalState.btsOption || "VL";
+            const finalGrade = document.getElementById("final-grade").textContent;
+
+            let csvLines = [];
+            csvLines.push("BTS MAINTENANCE DES VEHICULES - EPREUVE E5 (U5) - GRILLE D'EVALUATION C1.1 A C1.4");
+            csvLines.push(`Option BTS MV;${option}`);
+            csvLines.push(`Thematique / Support;${project.replace(/;/g, ',')}`);
+            csvLines.push(`Candidat;${student.replace(/;/g, ',')}`);
+            csvLines.push(`Date;${date}`);
+            csvLines.push(`Examinateur(s);${examiner.replace(/;/g, ',')}`);
+            csvLines.push(`Note finale sur 20;${finalGrade.replace('.', ',')}`);
+            csvLines.push("");
+            csvLines.push("Competence;Critere d'evaluation;ID;Element observe;Statut;Note (0.0 a 4.0);Niveau;Coefficient bloc;Points Obtenus;Points Max");
+
+            RUBRIC_DATA.forEach(crit => {
+                const coeff = getCritCoeff(evalState, crit);
+                const cleanCrit = crit.title.replace(/;/g, ',');
+
+                crit.indicators.forEach(ind => {
+                    const isNotEval = Boolean(evalState.notEvaluated[ind.id]);
+                    const cleanText = ind.text.replace(/;/g, ',').replace(/\n/g, ' ');
+
+                    if (isNotEval) {
+                        csvLines.push(`"${crit.competence}";"${cleanCrit}";"${ind.id}";"${cleanText}";"Non evalue";"-";"Non evalue";"-";"0";"0"`);
+                    } else {
+                        const score = Number(evalState.scores[ind.id] ?? 3.0);
+                        const lvlLabel = getLevelInfo(score).label;
+                        const earned = (score * coeff).toFixed(2).replace('.', ',');
+                        const max = (4 * coeff).toFixed(1).replace('.', ',');
+
+                        csvLines.push(`"${crit.competence}";"${cleanCrit}";"${ind.id}";"${cleanText}";"Evalue";${score.toFixed(1).replace('.', ',')};"${lvlLabel}";${coeff.toString().replace('.', ',')};${earned};${max}`);
+                    }
+                });
+            });
+
+            csvLines.push("");
+            const cleanComments = (evalState.comments || "").replace(/;/g, ',').replace(/\n/g, ' ');
+            csvLines.push(`Observations du jury;"${cleanComments}"`);
+
+            const csvContent = "\uFEFF" + csvLines.join("\r\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            const safeFilename = student.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Evaluation_E5_C1_${safeFilename}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast(`CSV exporté pour ${student}`);
+        }
+
+        function exportAllStudentsCSV() {
+            saveState();
+            let csvLines = [];
+            csvLines.push("SYNTHESE CLASSE - BTS MAINTENANCE DES VEHICULES - EPREUVE E5 (BLOC 1 : C1.1 A C1.4)");
+            csvLines.push("N°;Nom & Prenom;Option;Thematique;Date;Note /20;C1.1 Niveau Taxo;C1.2 Niveau Taxo;C1.3 Niveau Taxo;C1.4 Niveau Taxo;Observations");
+
+            studentsList.forEach((st, idx) => {
+                const grade = computeStudentGrade20(st);
+                const gradeStr = grade === null ? "N/E" : grade.toFixed(2).replace('.', ',');
+
+                const compLevels = {};
+                ["C1.1", "C1.2", "C1.3", "C1.4"].forEach(compKey => {
+                    let earned = 0, max = 0;
+                    RUBRIC_DATA.filter(c => c.competence === compKey).forEach(crit => {
+                        const c = getCritCoeff(st, crit);
+                        crit.indicators.forEach(ind => {
+                            if (st.notEvaluated && st.notEvaluated[ind.id]) return;
+                            const s = Number(st.scores[ind.id] ?? 3.0);
+                            earned += s * c;
+                            max += 4 * c;
+                        });
+                    });
+                    if (max === 0) {
+                        compLevels[compKey] = "N/E";
+                    } else {
+                        const taxo = getTaxonomicLevelInfo((earned / max) * 20);
+                        compLevels[compKey] = `${taxo.label} (${taxo.sublabel})`;
+                    }
+                });
+
+                const cleanName = (st.studentName || `Etudiant ${idx + 1}`).replace(/;/g, ',');
+                const cleanProj = (st.projectTitle || "").replace(/;/g, ',');
+                const cleanComm = (st.comments || "").replace(/;/g, ',').replace(/\r?\n/g, ' ');
+
+                csvLines.push(`${idx + 1};"${cleanName}";"${st.btsOption || 'VL'}";"${cleanProj}";"${st.evalDate || ''}";"${gradeStr}";"${compLevels['C1.1']}";"${compLevels['C1.2']}";"${compLevels['C1.3']}";"${compLevels['C1.4']}";"${cleanComm}"`);
+            });
+
+            const csvContent = "\uFEFF" + csvLines.join("\r\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().split('T')[0];
+
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Synthese_Classe_E5_C1_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast("Synthèse CSV des 30 étudiants exportée");
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById("toast-notification");
+            const dot = document.getElementById("toast-dot");
+            document.getElementById("toast-message").textContent = msg;
+            
+            dot.className = isError ? "w-2 h-2 rounded-full bg-red-400" : "w-2 h-2 rounded-full bg-emerald-400";
+
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 3500);
+        }
+
+        function initApp() {
+            initAllStudents();
+            syncFormFromState();
+            renderStudentTabs();
+            renderCriteria();
+            recalculateAll();
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
